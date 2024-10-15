@@ -1,0 +1,1 @@
+I am planning on using a free program called "diptrace" for designing the board and generating the gerbers.
