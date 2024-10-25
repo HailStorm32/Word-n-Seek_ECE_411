@@ -1,15 +1,15 @@
 #include "esp_log.h"
 #include <gpioControl.h>
+#include <matrixDisplay.h>
 
-#define LOG_TAG "MAIN"
+#define MAIN_TAG "main"
 
 int app_main(void)
 {
     uint32_t ioNum;
 
     initGPIO();
-
-    ESP_LOGI(LOG_TAG, "Boot successful");
+    display_init();
 
     while(1)
     {
