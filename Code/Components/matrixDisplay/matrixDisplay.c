@@ -3,6 +3,9 @@
 #include "freertos/task.h"
 #include <max7219.h>
 
+#include "matrixDisplay.h"
+#include "prvGraphics.h"
+
 #define CASCADE_SIZE 5  // Number of cascaded MAX7219 modules in a display
 #define NUM_DISPLAYS 2  // Number of displays in the system
 
@@ -29,13 +32,6 @@ static matrixDisplay_t lowerDisplay;
 static matrixDisplay_t upperDisplay;
 
 static matrixDisplayPtr_t displays[NUM_DISPLAYS] = {&lowerDisplay, &upperDisplay};
-
-
-static const uint64_t bootAnimation[] = {
-    0xffffffffffffffff,
-    0xfff9c1bdffffdbff,
-    0x00063e4200002400
-};
 
 esp_err_t display_init(void)
 {
