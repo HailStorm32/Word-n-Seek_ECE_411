@@ -16,12 +16,6 @@
 
 #define MATRIX_DISP_TAG "matrix_display"
 
-enum display_t
-{
-    LOWER_DISPLAY = 0,
-    UPPER_DISPLAY
-};
-
 typedef struct
 {
     uint8_t CS_PIN;
@@ -32,6 +26,27 @@ static matrixDisplay_t lowerDisplay;
 static matrixDisplay_t upperDisplay;
 
 static matrixDisplayPtr_t displays[NUM_DISPLAYS] = {&lowerDisplay, &upperDisplay};
+
+void clearDisplay(display_t display)
+{
+switch (display)
+{
+case LOWER_DISPLAY:
+    max7219_clear(&displays[LOWER_DISPLAY]->dev);
+    break;
+case UPPER_DISPLAY:
+    max7219_clear(&displays[UPPER_DISPLAY]->dev);
+    break;
+case ALL_DISPLAYS:
+    max7219_clear(&displays[LOWER_DISPLAY]->dev);
+    max7219_clear(&displays[UPPER_DISPLAY]->dev);
+    break;
+
+default:
+    ESP_LOGE(MATRIX_DISP_TAG, "Invalid display");
+    break;
+}
+}
 
 esp_err_t display_init(void)
 {
@@ -68,8 +83,7 @@ esp_err_t display_init(void)
     }
 
     // Clear the displays
-    max7219_clear(&lowerDisplay.dev);
-    max7219_clear(&upperDisplay.dev);
+    clearDisplay(ALL_DISPLAYS);
 
     // Display the boot animation on all modules
     for(size_t frame = 0; frame < sizeof(bootAnimation) / sizeof(uint64_t); frame++)
@@ -85,8 +99,7 @@ esp_err_t display_init(void)
     vTaskDelay(pdMS_TO_TICKS(700));
 
     // Clear the displays
-    max7219_clear(&lowerDisplay.dev);
-    max7219_clear(&upperDisplay.dev);
+    clearDisplay(ALL_DISPLAYS);
 
     return ESP_OK;
 }

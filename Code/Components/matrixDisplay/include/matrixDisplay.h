@@ -1,5 +1,25 @@
 #include <esp_err.h>
 
+typedef enum
+{
+    LOWER_DISPLAY = 0,
+    UPPER_DISPLAY,
+    
+    ALL_DISPLAYS
+} display_t;
+
+/*
+* Description:
+*      Clears selected display
+*
+* Arguments:
+*      display_t display: The display to clear
+*
+* Returns:
+*      None
+*/
+void clearDisplay(display_t display);
+
 
 /*
 * Description:

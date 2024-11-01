@@ -1,3 +1,8 @@
+/*
+ To create and view animations/frames, use the following website:
+ https://xantorohara.github.io/led-matrix-editor/
+*/
+
 #include <stdint.h>
 
 const uint64_t bootAnimation[] = {
