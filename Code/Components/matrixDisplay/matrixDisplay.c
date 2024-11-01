@@ -22,6 +22,13 @@ typedef struct
     max7219_t dev;
 } matrixDisplay_t, *matrixDisplayPtr_t;
 
+typedef struct
+{
+    uint8_t curSegment;
+    display_t curDisplay;
+} cursor_t;
+
+
 static matrixDisplay_t lowerDisplay;
 static matrixDisplay_t upperDisplay;
 
