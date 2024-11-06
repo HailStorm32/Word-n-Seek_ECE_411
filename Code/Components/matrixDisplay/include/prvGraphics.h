@@ -2,6 +2,7 @@
  To create and/or view animations/frames, use the following website:
  https://xantorohara.github.io/led-matrix-editor/
 */
+#pragma once
 
 #include <stdint.h>
 
@@ -38,6 +39,8 @@ typedef enum
 /*-----------------------------------------------------------
 GRAPHICS
 ------------------------------------------------------------*/
+
+//A - Z
 const uint64_t graphicsLetter[] = {
     0x0033333f33331e0c,
     0x003f66663e66663f,
@@ -67,7 +70,8 @@ const uint64_t graphicsLetter[] = {
     0x007f664c1831637f
 };
 
-const uint64_t wordNSeek[] = {
+//WORDn\nSEEK!
+const uint64_t dispWordNSeek[] = {
     0x0063777f6b636363,
     0x001c36636363361c,
     0x006766363e66663f,
@@ -78,6 +82,20 @@ const uint64_t wordNSeek[] = {
     0x007f46161e16467f,
     0x006766361e366667,
     0x180018183c3c1800
+};
+
+//-----/n<ZAB>
+const uint64_t dispEmptyBoard[] = {
+    0x0000003c00000000,
+    0x0000003c00000000,
+    0x0000003c00000000,
+    0x0000003c00000000,
+    0x0000003c00000000,
+    0x60787e7f7e786000,
+    0x007f664c1831637f,
+    0x0033333f33331e0c,
+    0x003f66663e66663f,
+    0x061e7efe7e1e0600
 };
 
 

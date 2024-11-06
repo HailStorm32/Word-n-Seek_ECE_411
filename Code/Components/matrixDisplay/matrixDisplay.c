@@ -1,3 +1,4 @@
+#include <string.h>
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -11,13 +12,13 @@
 Literal Constants
 ------------------------------------------------------------*/
 
-#define CASCADE_SIZE 5  // Number of cascaded MAX7219 modules in a display
-#define NUM_DISPLAYS 2  // Number of displays in the system
-
 #define MOSI_PIN 11
 #define CS_PIN_LWR 10
 #define CS_PIN_UPPR 9
 #define CLK_PIN 12
+
+#define LEFT_ARROW_SEGMENT  0
+#define RIGHT_ARROW_SEGMENT (CASCADE_SIZE - 1)
 
 #define MATRIX_DISP_TAG "matrix_display"
 
@@ -36,7 +37,14 @@ typedef struct
 {
     uint8_t curSegment;
     display_t curDisplay;
+    bool isValid;
 } cursor_t;
+
+/*-----------------------------------------------------------
+Gobals
+------------------------------------------------------------*/
+uint64_t segmentStates[NUM_DISPLAYS][CASCADE_SIZE];
+cursor_t cursor;
 
 
 /*-----------------------------------------------------------
@@ -51,6 +59,23 @@ static matrixDisplayPtr_t displays[NUM_DISPLAYS] = {&lowerDisplay, &upperDisplay
 /*-----------------------------------------------------------
 Local Function Prototypes
 ------------------------------------------------------------*/
+
+/*
+* Description:
+*      Makes sure the cursor is in a valid position
+*      If the cursor is out of bounds, it is corrected
+*
+*    NOTE: Used when moving the cursor to the lower display
+*       where the cursor could be placed on the left and right
+*       arrows   
+* 
+* Arguments:
+*    None
+* 
+* Returns:
+*    None
+*/
+void correctCursorPos(void);
 
 /*
 * Description:
@@ -70,6 +95,19 @@ Local Function Prototypes
 */
 esp_err_t displayFullGraphic(const uint64_t *graphic, const int size);
 
+
+/*
+* Description:
+*   Resets the board to the starting position
+*   
+* Arguments:
+*      None
+*
+* Returns:
+*      esp_err_t: ESP_OK if board was reset successfully
+*/
+esp_err_t resetBoard(void);
+
 /*-----------------------------------------------------------
 Functions
 ------------------------------------------------------------*/
@@ -80,18 +118,42 @@ void clearDisplay(display_t display)
     {
     case LOWER_DISPLAY:
         max7219_clear(&displays[LOWER_DISPLAY]->dev);
+        memset(segmentStates[LOWER_DISPLAY], 0, sizeof(segmentStates[LOWER_DISPLAY]));
         break;
     case UPPER_DISPLAY:
         max7219_clear(&displays[UPPER_DISPLAY]->dev);
+        memset(segmentStates[UPPER_DISPLAY], 0, sizeof(segmentStates[UPPER_DISPLAY]));
         break;
     case ALL_DISPLAYS:
         max7219_clear(&displays[LOWER_DISPLAY]->dev);
         max7219_clear(&displays[UPPER_DISPLAY]->dev);
+        memset(segmentStates, 0, sizeof(segmentStates));
         break;
 
     default:
         ESP_LOGE(MATRIX_DISP_TAG, "Invalid display");
         break;
+    }
+}
+
+void correctCursorPos(void)
+{   
+    // Only do check if cursor is on the lower display
+    if(cursor.curDisplay == LOWER_DISPLAY)
+    {
+        switch (cursor.curSegment)
+        {
+        case LEFT_ARROW_SEGMENT:
+            cursor.curSegment = LEFT_ARROW_SEGMENT + 1;
+            break;
+
+        case RIGHT_ARROW_SEGMENT:
+            cursor.curSegment = RIGHT_ARROW_SEGMENT - 1;
+            break;
+
+        default:
+            break;
+        }
     }
 }
 
@@ -118,8 +180,13 @@ esp_err_t displayFullGraphic(const uint64_t *graphic, const int size)
     for(int display = NUM_DISPLAYS - 1; display >= 0; display--)
     {
         for(uint8_t segment = 0; segment < CASCADE_SIZE; segment++)
-        {
+        {   
+            // Draw the graphic on the display
             ret |= max7219_draw_image_8x8(&displays[display]->dev, segment*8, &graphic[frame]);
+
+            // Save the segment state
+            segmentStates[display][segment] = graphic[frame];
+
             frame++;
         }
     }
@@ -129,6 +196,8 @@ esp_err_t displayFullGraphic(const uint64_t *graphic, const int size)
 
 esp_err_t display_init(void)
 {
+    cursor.isValid = false;
+
     // Set the CS pins for the displays
     displays[LOWER_DISPLAY]->CS_PIN = CS_PIN_LWR;
     displays[UPPER_DISPLAY]->CS_PIN = CS_PIN_UPPR;
@@ -164,7 +233,7 @@ esp_err_t display_init(void)
     // Clear the displays
     clearDisplay(ALL_DISPLAYS);
 
-    // Display the boot animation on all modules
+    // Display the test animation on all modules
     for(size_t frame = 0; frame < sizeof(bootAnimation) / sizeof(uint64_t); frame++)
     {
         for(size_t segment = 0; segment < CASCADE_SIZE; segment++)
@@ -172,15 +241,132 @@ esp_err_t display_init(void)
             ESP_ERROR_CHECK(max7219_draw_image_8x8(&lowerDisplay.dev, segment*8, &bootAnimation[frame]));
             ESP_ERROR_CHECK(max7219_draw_image_8x8(&upperDisplay.dev, segment*8, &bootAnimation[frame]));
         }
-        vTaskDelay(pdMS_TO_TICKS(1000));
+        vTaskDelay(pdMS_TO_TICKS(400));
     }
-    
-    vTaskDelay(pdMS_TO_TICKS(700));
+    vTaskDelay(pdMS_TO_TICKS(400));
 
     // Clear the displays
     clearDisplay(ALL_DISPLAYS);
 
-    ESP_ERROR_CHECK(displayFullGraphic(wordNSeek, sizeof(wordNSeek)));
+    // Diplay the WORD n SEEK! graphic
+    ESP_ERROR_CHECK(displayFullGraphic(dispWordNSeek, sizeof(dispWordNSeek)));
+
+    vTaskDelay(pdMS_TO_TICKS(5000));
+
+    // Reset the board
+    resetBoard();
 
     return ESP_OK;
+}
+
+esp_err_t moveCursor(direction_t direction)
+{
+    esp_err_t ret = ESP_OK;
+    uint64_t * currentSegmentState;
+
+    // Get pointer to the current segment state
+    currentSegmentState = &segmentStates[cursor.curDisplay][cursor.curSegment];
+
+    // Take the cursor graphic out of the current segment
+    *currentSegmentState = ~*currentSegmentState;
+
+    // Clear the current cursor
+    ret |= max7219_draw_image_8x8(&displays[cursor.curDisplay]->dev, cursor.curSegment * 8, currentSegmentState);
+
+    // Move the cursor
+    switch (direction)
+    {
+    case UP:
+        if(cursor.curDisplay == LOWER_DISPLAY)
+        {
+            cursor.curDisplay = UPPER_DISPLAY;
+        }
+        else
+        {
+            cursor.curDisplay = LOWER_DISPLAY;
+
+            correctCursorPos();
+        }
+        break;
+    case DOWN:
+        if(cursor.curDisplay == UPPER_DISPLAY)
+        {
+            cursor.curDisplay = LOWER_DISPLAY;
+
+            correctCursorPos();
+        }
+        else
+        {
+            cursor.curDisplay = UPPER_DISPLAY;
+        }
+        break;
+    case LEFT:
+        // if(cursor.curSegment > 0)
+        // {
+        //     cursor.curSegment--;
+        // }
+        break;
+    case RIGHT:
+        // if(cursor.curSegment < CASCADE_SIZE - 1)
+        // {
+        //     cursor.curSegment++;
+        // }
+        break;
+    
+    default:
+        ESP_LOGE(MATRIX_DISP_TAG, "Invalid cursor direction");
+        ret = ESP_ERR_NOT_SUPPORTED;
+        break;
+    }
+
+    // Get pointer to the new current segment state
+    currentSegmentState = &segmentStates[cursor.curDisplay][cursor.curSegment];
+
+    // Create the new cursor graphic
+    *currentSegmentState = ~*currentSegmentState;
+
+    // Display the cursor
+    ret |= max7219_draw_image_8x8(&displays[cursor.curDisplay]->dev, cursor.curSegment * 8, currentSegmentState);
+
+    return ret;
+}
+
+esp_err_t resetBoard(void)
+{
+    esp_err_t ret = ESP_OK;
+
+    clearDisplay(ALL_DISPLAYS);
+
+    // Display the empty board
+    ret |= displayFullGraphic(dispEmptyBoard, sizeof(dispEmptyBoard));
+
+    // Reset the cursor
+    ret |= resetCursor();
+    
+    return ret;
+}
+
+esp_err_t resetCursor(void)
+{
+    esp_err_t ret = ESP_OK;
+
+    if(cursor.isValid)
+    {
+        // Clear the current cursor
+        segmentStates[cursor.curDisplay][cursor.curSegment] = ~segmentStates[cursor.curDisplay][cursor.curSegment];
+        ret |= max7219_draw_image_8x8(&displays[cursor.curDisplay]->dev, cursor.curSegment * 8, &segmentStates[cursor.curDisplay][cursor.curSegment]);
+    }
+
+    // Reset the cursor
+    cursor.curDisplay = LOWER_DISPLAY;
+    cursor.curSegment = 2;
+
+    // Display the new cursor
+    segmentStates[cursor.curDisplay][cursor.curSegment] = ~segmentStates[cursor.curDisplay][cursor.curSegment];
+    ret |= max7219_draw_image_8x8(&displays[cursor.curDisplay]->dev, cursor.curSegment * 8, &segmentStates[cursor.curDisplay][cursor.curSegment]);
+
+    cursor.isValid = true;
+    
+
+    return ret;
 }

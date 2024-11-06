@@ -45,7 +45,24 @@ int app_main(void)
                 }
             }
             else if(ioNum == GPIO_JOY_LEFT || ioNum == GPIO_JOY_RIGHT || ioNum == GPIO_JOY_UP || ioNum == GPIO_JOY_DOWN) {
-                printf("Joystick press\n");
+                switch (ioNum)
+                {
+                case GPIO_JOY_LEFT:
+                    moveCursor(LEFT);
+                    break;
+                case GPIO_JOY_RIGHT:
+                    moveCursor(RIGHT);
+                    break;
+                case GPIO_JOY_UP:
+                    moveCursor(UP);
+                    break;
+                case GPIO_JOY_DOWN:
+                    moveCursor(DOWN);
+                    break;
+                
+                default:
+                    break;
+                }
             }
         }
     }
