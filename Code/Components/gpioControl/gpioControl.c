@@ -1,3 +1,4 @@
+#include "esp_log.h"
 #include "gpioControl.h"
 
 /*-----------------------------------------------------------
@@ -10,8 +11,17 @@ Literal Constants
 
 #define ESP_INTR_FLAG_DEFAULT 0
 
+#define DEBOUNCE_TIME_MS 200
+
 
 #define LOG_TAG "gpio_control"
+
+
+/*-----------------------------------------------------------
+Macros
+------------------------------------------------------------*/
+
+#define TICKS_TO_MS(ticks) (ticks * portTICK_PERIOD_MS)
 
 /*-----------------------------------------------------------
 Types
@@ -27,6 +37,8 @@ QueueHandle_t gpioEventQueue = NULL;
 Statics
 ------------------------------------------------------------*/
 
+uint64_t s_lastTime;
+
 /*-----------------------------------------------------------
 Local Function Prototypes
 ------------------------------------------------------------*/
@@ -34,16 +46,28 @@ Local Function Prototypes
 static void IRAM_ATTR gpioIsrHandler(void* arg)
 {
     uint32_t gpio_num = (uint32_t) arg;
-    xQueueSendFromISR(gpioEventQueue, &gpio_num, NULL);
+    uint64_t curMS = TICKS_TO_MS(xTaskGetTickCountFromISR());
+
+    //To debounce the button, we will only send the event if the last event was more than DEBOUNCE_TIME_MS ago
+    if(curMS - s_lastTime > DEBOUNCE_TIME_MS)
+    {
+        xQueueSendFromISR(gpioEventQueue, &gpio_num, NULL);
+    }
+
+    s_lastTime = curMS;
 }
 
 /*-----------------------------------------------------------
 Functions
 ------------------------------------------------------------*/
 
-bool initGPIO()
+esp_err_t initGPIO()
 {
     gpio_config_t ioConf = {}; 
+    esp_err_t ret = ESP_OK;
+
+    //initialize the timer
+    s_lastTime = 0;
 
     //disable interrupt
     ioConf.intr_type = GPIO_INTR_DISABLE;
@@ -56,7 +80,7 @@ bool initGPIO()
     //disable pull-up mode
     ioConf.pull_up_en = 0;
     //configure GPIO with the given settings
-    gpio_config(&ioConf);
+    ret |= gpio_config(&ioConf);
 
     //interrupt of rising edge
     ioConf.intr_type = GPIO_INTR_NEGEDGE;
@@ -66,24 +90,35 @@ bool initGPIO()
     ioConf.mode = GPIO_MODE_INPUT;
     //enable pull-up mode
     ioConf.pull_up_en = 1;
-    gpio_config(&ioConf);
+    ret |= gpio_config(&ioConf);
+
+    if(ret != ESP_OK)
+    {
+        ESP_LOGE(LOG_TAG, "Error setting up GPIO pins");
+        return ret;
+    }
     
     //create a queue to handle gpio event from isr
     gpioEventQueue = xQueueCreate(10, sizeof(uint32_t));
 
     //install gpio isr service
-    gpio_install_isr_service(ESP_INTR_FLAG_DEFAULT);
+    ret |= gpio_install_isr_service(ESP_INTR_FLAG_DEFAULT);
 
     //hook up isr handler for each pin
-    gpio_isr_handler_add(GPIO_JOY_LEFT, gpioIsrHandler, (void*) GPIO_JOY_LEFT);
-    gpio_isr_handler_add(GPIO_JOY_RIGHT, gpioIsrHandler, (void*) GPIO_JOY_RIGHT);
-    gpio_isr_handler_add(GPIO_JOY_UP, gpioIsrHandler, (void*) GPIO_JOY_UP);
-    gpio_isr_handler_add(GPIO_JOY_DOWN, gpioIsrHandler, (void*) GPIO_JOY_DOWN);
-    gpio_isr_handler_add(GPIO_BTN_A, gpioIsrHandler, (void*) GPIO_BTN_A);
-    gpio_isr_handler_add(GPIO_BTN_B, gpioIsrHandler, (void*) GPIO_BTN_B);
-    gpio_isr_handler_add(GPIO_BTN_C, gpioIsrHandler, (void*) GPIO_BTN_C);
-    gpio_isr_handler_add(GPIO_BTN_D, gpioIsrHandler, (void*) GPIO_BTN_D);
+    ret |= gpio_isr_handler_add(GPIO_JOY_LEFT, gpioIsrHandler, (void*) GPIO_JOY_LEFT);
+    ret |= gpio_isr_handler_add(GPIO_JOY_RIGHT, gpioIsrHandler, (void*) GPIO_JOY_RIGHT);
+    ret |= gpio_isr_handler_add(GPIO_JOY_UP, gpioIsrHandler, (void*) GPIO_JOY_UP);
+    ret |= gpio_isr_handler_add(GPIO_JOY_DOWN, gpioIsrHandler, (void*) GPIO_JOY_DOWN);
+    ret |= gpio_isr_handler_add(GPIO_BTN_A, gpioIsrHandler, (void*) GPIO_BTN_A);
+    ret |= gpio_isr_handler_add(GPIO_BTN_B, gpioIsrHandler, (void*) GPIO_BTN_B);
+    ret |= gpio_isr_handler_add(GPIO_BTN_C, gpioIsrHandler, (void*) GPIO_BTN_C);
+    ret |= gpio_isr_handler_add(GPIO_BTN_D, gpioIsrHandler, (void*) GPIO_BTN_D);
 
+    if(ret != ESP_OK)
+    {
+        ESP_LOGE(LOG_TAG, "Error setting up GPIO ISRs");
+        return ret;
+    }
 
-    return true;
+    return ret;
 }
