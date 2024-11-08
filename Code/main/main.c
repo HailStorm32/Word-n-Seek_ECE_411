@@ -1,5 +1,8 @@
 #include "esp_log.h"
 #include <gpioControl.h>
+#include "esp_log.h"
+#include <wifi.h>
+
 
 #define LOG_TAG "MAIN"
 
@@ -8,6 +11,8 @@ int app_main(void)
     uint32_t ioNum;
 
     initGPIO();
+    ESP_LOGI(LOG_TAG, "ESP32 WiFi Station");
+    wifi_init_sta();
 
     ESP_LOGI(LOG_TAG, "Boot successful");
 
