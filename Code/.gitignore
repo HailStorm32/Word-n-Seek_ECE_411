@@ -56,3 +56,5 @@ dkms.conf
 
 # ESP-IDF
 build/
+*.old
+sdkconfig
