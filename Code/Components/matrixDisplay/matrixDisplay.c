@@ -301,16 +301,26 @@ esp_err_t moveCursor(direction_t direction)
         }
         break;
     case LEFT:
-        // if(cursor.curSegment > 0)
-        // {
-        //     cursor.curSegment--;
-        // }
+        if(cursor.curSegment > 0)
+        {
+            cursor.curSegment--;
+        }
+        else
+        {
+            cursor.curSegment = CASCADE_SIZE - 1;
+        }
+        correctCursorPos();
         break;
     case RIGHT:
-        // if(cursor.curSegment < CASCADE_SIZE - 1)
-        // {
-        //     cursor.curSegment++;
-        // }
+        if(cursor.curSegment < CASCADE_SIZE - 1)
+        {
+            cursor.curSegment++;
+        }
+        else
+        {
+            cursor.curSegment = 0;
+        }
+        correctCursorPos();
         break;
     
     default:
@@ -367,6 +377,5 @@ esp_err_t resetCursor(void)
 
     cursor.isValid = true;
     
-
     return ret;
 }
