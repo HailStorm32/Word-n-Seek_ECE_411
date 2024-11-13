@@ -98,6 +98,20 @@ esp_err_t displayFullGraphic(const uint64_t *graphic, const int size);
 
 /*
 * Description:
+*      Converts a graphic to a character
+* 
+* Arguments:
+*     uint64_t graphic: The graphic to convert
+* 
+* Returns:
+*      char: The character represented by the graphic
+*      '?' if the graphic is not a valid character
+*/
+char graphicToChar(uint64_t graphic);
+
+
+/*
+* Description:
 *   Resets the board to the starting position
 *   
 * Arguments:
@@ -261,23 +275,71 @@ esp_err_t display_init(void)
 
 char getCharAtCursor(void)
 {
-    uint64_t * currentSegmentState;
+    return graphicToChar(segmentStates[cursor.curDisplay][cursor.curSegment]);
+}
 
-    // Get pointer to the current segment state
-    currentSegmentState = &segmentStates[cursor.curDisplay][cursor.curSegment];
+esp_err_t getWord(char *word, int wordSize)
+{
+    esp_err_t ret = ESP_OK;
+    uint64_t wordGraphicArray[CASCADE_SIZE] = {0};
 
-    // Check if cursor is on a letter
+    // Check if the word array is valid
+    if(word == NULL)
+    {
+        ESP_LOGE(MATRIX_DISP_TAG, "Invalid word array");
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    // Check if the word array is large enough (including null terminator)
+    if(wordSize < CASCADE_SIZE + 1)
+    {
+        ESP_LOGE(MATRIX_DISP_TAG, "Word array is too small");
+        return ESP_ERR_INVALID_SIZE;
+    }
+
+    // Get the word in graphic form
+    memcpy(wordGraphicArray, segmentStates[UPPER_DISPLAY], CASCADE_SIZE * sizeof(uint64_t));
+
+    // ESP_LOG_BUFFER_HEXDUMP(MATRIX_DISP_TAG, wordGraphicArray, wordSize * sizeof(uint64_t), ESP_LOG_DEBUG);
+    // ESP_LOG_BUFFER_HEXDUMP(MATRIX_DISP_TAG, segmentStates[UPPER_DISPLAY], CASCADE_SIZE * sizeof(uint64_t), ESP_LOG_DEBUG);
+
+    // Convert the graphic to characters
+    for(uint8_t segment = 0; segment < CASCADE_SIZE; segment++)
+    {
+        word[segment] = graphicToChar(wordGraphicArray[segment]);
+    }
+
+    // Add null terminator
+    word[CASCADE_SIZE + 1] = '\0';
+
+    return ret;
+}
+
+char graphicToChar(uint64_t graphic)
+{   
+    // Check if graphic is a letter
     for(uint8_t index = 0; index < ALPHABET_COUNT; index++)
     {   
-        // Check if the cursor is on a letter (also account for the cursor graphic)
-        if((*currentSegmentState == graphicsLetter[index]) || (*currentSegmentState == ~graphicsLetter[index]))
+        // Also account for the inverted graphic (aka the cursor)
+        if((graphic == graphicsLetter[index]) || (graphic == ~graphicsLetter[index]))
         {
-            return('A' + index);
+            return 'A' + index;
         }
     }
 
     // Check if cursor is on a special character
-    //TODO: Add special characters
+    switch(graphic)
+    {
+    case GRAPHIC_NO_SELECTION:
+    case ~GRAPHIC_NO_SELECTION:
+        return '-';
+        break;
+    
+    default:
+        break;
+    }
+
+    ESP_LOGD(MATRIX_DISP_TAG, "Invalid graphic: %llx", graphic);
 
     return '?';
 }

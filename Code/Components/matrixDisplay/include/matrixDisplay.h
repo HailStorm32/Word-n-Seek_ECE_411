@@ -66,6 +66,21 @@ char getCharAtCursor(void);
 
 /*
 * Description:
+*      returns a null terminated string of characters from the top display
+*       aka the word
+* 
+* Arguments:
+*     char *word: The array to store the word (must account for null terminator)
+*     int wordSize: The size of the array
+* 
+* Returns:
+*      esp_err_t: ESP_OK if the word was retrieved successfully
+*/
+esp_err_t getWord(char *word, int wordSize);
+
+
+/*
+* Description:
 *      Moves the cursor in the specified direction
 * 
 * Arguments:

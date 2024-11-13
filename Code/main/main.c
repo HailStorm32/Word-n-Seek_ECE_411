@@ -7,6 +7,7 @@
 int app_main(void)
 {
     uint32_t ioNum;
+    char word[6] = {0};
 
     initGPIO();
     display_init();
@@ -70,6 +71,9 @@ int app_main(void)
                 }
             }
             ESP_LOGD(LOG_TAG, "Character is: %c", getCharAtCursor());
+            getWord(word, sizeof(word));
+            ESP_LOGD(LOG_TAG, "Word is: %s", word);
+
         }
     }
 
