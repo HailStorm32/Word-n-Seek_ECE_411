@@ -52,6 +52,20 @@ esp_err_t display_init(void);
 
 /*
 * Description:
+*      Returns the character at the cursor
+* 
+* Arguments:
+*     None
+* 
+* Returns:
+*      char: The character at the cursor
+*      '?' if the cursor is not on valid a character
+*/
+char getCharAtCursor(void);
+
+
+/*
+* Description:
 *      Moves the cursor in the specified direction
 * 
 * Arguments:

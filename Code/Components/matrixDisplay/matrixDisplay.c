@@ -259,6 +259,29 @@ esp_err_t display_init(void)
     return ESP_OK;
 }
 
+char getCharAtCursor(void)
+{
+    uint64_t * currentSegmentState;
+
+    // Get pointer to the current segment state
+    currentSegmentState = &segmentStates[cursor.curDisplay][cursor.curSegment];
+
+    // Check if cursor is on a letter
+    for(uint8_t index = 0; index < ALPHABET_COUNT; index++)
+    {   
+        // Check if the cursor is on a letter (also account for the cursor graphic)
+        if((*currentSegmentState == graphicsLetter[index]) || (*currentSegmentState == ~graphicsLetter[index]))
+        {
+            return('A' + index);
+        }
+    }
+
+    // Check if cursor is on a special character
+    //TODO: Add special characters
+
+    return '?';
+}
+
 esp_err_t moveCursor(direction_t direction)
 {
     esp_err_t ret = ESP_OK;

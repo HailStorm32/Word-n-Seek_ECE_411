@@ -33,14 +33,16 @@ typedef enum
     W,
     X,
     Y,
-    Z
+    Z,
+
+    ALPHABET_COUNT
 } alphabet_t;
 
 /*-----------------------------------------------------------
 GRAPHICS
 ------------------------------------------------------------*/
 
-//A - Z
+//A - Z (MUST BE IN ORDER)
 const uint64_t graphicsLetter[] = {
     0x0033333f33331e0c,
     0x003f66663e66663f,
@@ -69,6 +71,7 @@ const uint64_t graphicsLetter[] = {
     0x001e0c0c1e333333,
     0x007f664c1831637f
 };
+static_assert(ALPHABET_COUNT == (sizeof(graphicsLetter) / sizeof(uint64_t)), "ALPHABET_COUNT does not match the number of elements in graphicsLetter");
 
 //WORDn\nSEEK!
 const uint64_t dispWordNSeek[] = {

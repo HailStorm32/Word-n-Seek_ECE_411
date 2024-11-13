@@ -2,7 +2,7 @@
 #include <gpioControl.h>
 #include <matrixDisplay.h>
 
-#define MAIN_TAG "main"
+#define LOG_TAG  "main"
 
 int app_main(void)
 {
@@ -11,12 +11,16 @@ int app_main(void)
     initGPIO();
     display_init();
 
+    ESP_LOGI(LOG_TAG, "Boot successful");
+
     while(1)
     {
-        if(xQueueReceive(gpioEventQueue, &ioNum, portMAX_DELAY)) {
+        if(xQueueReceive(gpioEventQueue, &ioNum, portMAX_DELAY)) 
+        {
             printf("GPIO[%"PRIu32"] intr\n", ioNum);
 
-            if(ioNum == GPIO_BTN_A || ioNum == GPIO_BTN_B || ioNum == GPIO_BTN_C || ioNum == GPIO_BTN_D) {
+            if(ioNum == GPIO_BTN_A || ioNum == GPIO_BTN_B || ioNum == GPIO_BTN_C || ioNum == GPIO_BTN_D) 
+            {
                 switch (ioNum)
                 {
                 case GPIO_BTN_A:
@@ -44,7 +48,8 @@ int app_main(void)
                     break;
                 }
             }
-            else if(ioNum == GPIO_JOY_LEFT || ioNum == GPIO_JOY_RIGHT || ioNum == GPIO_JOY_UP || ioNum == GPIO_JOY_DOWN) {
+            else if(ioNum == GPIO_JOY_LEFT || ioNum == GPIO_JOY_RIGHT || ioNum == GPIO_JOY_UP || ioNum == GPIO_JOY_DOWN) 
+            {
                 switch (ioNum)
                 {
                 case GPIO_JOY_LEFT:
@@ -64,6 +69,7 @@ int app_main(void)
                     break;
                 }
             }
+            ESP_LOGD(LOG_TAG, "Character is: %c", getCharAtCursor());
         }
     }
 
