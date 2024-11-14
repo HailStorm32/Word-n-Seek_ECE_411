@@ -464,3 +464,43 @@ esp_err_t resetCursor(void)
     
     return ret;
 }
+
+esp_err_t setCharacter(char character, uint8_t charPos)
+{
+    esp_err_t ret = ESP_OK;
+    uint64_t graphic = 0;
+
+    // Check if the character is a letter
+    if((character >= 'A') && (character <= 'Z'))
+    {
+        graphic = graphicsLetter[character - 'A'];
+    }
+    else
+    {
+        // Check if the character is a special character
+        switch(character)
+        {
+        case '-':
+            graphic = GRAPHIC_NO_SELECTION;
+            break;
+        
+        default:
+            ESP_LOGE(MATRIX_DISP_TAG, "Invalid character: %c", character);
+            return ESP_ERR_INVALID_ARG;
+            break;
+        }
+    }
+
+    // Check if the character position is valid
+    if(charPos >= CASCADE_SIZE)
+    {
+        ESP_LOGE(MATRIX_DISP_TAG, "Invalid character position: %d", charPos);
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    // Set the character
+    segmentStates[UPPER_DISPLAY][charPos] = graphic;
+    ret |= max7219_draw_image_8x8(&displays[UPPER_DISPLAY]->dev, charPos * 8, &graphic);
+
+    return ret;
+}

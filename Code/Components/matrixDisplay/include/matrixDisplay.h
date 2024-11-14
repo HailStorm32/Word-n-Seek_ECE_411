@@ -103,3 +103,16 @@ esp_err_t moveCursor(direction_t direction);
 *      esp_err_t: ESP_OK if the cursor was reset successfully
 */
 esp_err_t resetCursor(void);
+
+/*
+* Description:
+*      sets the segment to the character
+* 
+* Arguments:
+*     char character: The character to display
+*     uint8_t charPos: The segment to display the character (zero indexed)
+* 
+* Returns:
+*      esp_err_t: ESP_OK if the character was set successfully
+*/
+esp_err_t setCharacter(char character, uint8_t charPos);

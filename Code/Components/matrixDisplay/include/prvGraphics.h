@@ -44,6 +44,7 @@ GRAPHICS
 
 //Special Characters
 #define GRAPHIC_NO_SELECTION 0x0000003c00000000 // -
+#define GRAPHIC_
 
 //A - Z (MUST BE IN ORDER)
 const uint64_t graphicsLetter[] = {
