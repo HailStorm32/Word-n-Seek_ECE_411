@@ -33,4 +33,4 @@ extern QueueHandle_t gpioEventQueue;
 *      true -- if the GPIO pins were successfully set up
 *      false -- if the GPIO pins were not successfully set up
 */
-bool initGPIO();
+esp_err_t initGPIO();
