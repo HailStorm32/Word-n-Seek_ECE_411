@@ -21,6 +21,45 @@ typedef enum
     RIGHT
 } direction_t;
 
+typedef enum
+{
+    A,
+    B,
+    C,
+    D,
+    E,
+    F,
+    G,
+    H,
+    I,
+    J,
+    K,
+    L,
+    M,
+    N,
+    O,
+    P,
+    Q,
+    R,
+    S,
+    T,
+    U,
+    V,
+    W,
+    X,
+    Y,
+    Z,
+    ALPHABET_COUNT,
+
+    SPECIAL_CHARACTERS_START,
+    NO_SELECTION = SPECIAL_CHARACTERS_START,
+    INCORRECT,
+    SPECIAL_CHARACTERS_END,
+    
+    SPECIAL_CHARACTERS_COUNT = SPECIAL_CHARACTERS_END - SPECIAL_CHARACTERS_START
+
+} characters_t;
+
 extern uint64_t segmentStates[NUM_DISPLAYS][CASCADE_SIZE];
 
 
@@ -109,10 +148,10 @@ esp_err_t resetCursor(void);
 *      sets the segment to the character
 * 
 * Arguments:
-*     char character: The character to display
+*     characters_t character: The character to display
 *     uint8_t charPos: The segment to display the character (zero indexed)
 * 
 * Returns:
 *      esp_err_t: ESP_OK if the character was set successfully
 */
-esp_err_t setCharacter(char character, uint8_t charPos);
+esp_err_t setCharacter(characters_t character, uint8_t charPos);

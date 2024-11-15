@@ -14,9 +14,9 @@ int app_main(void)
 
     ESP_LOGI(LOG_TAG, "Boot successful");
 
-    setCharacter('E', 0);
-    setCharacter('C', 1);
-    setCharacter('E', 2);
+    setCharacter(E, 0);
+    setCharacter(C, 1);
+    setCharacter(E, 2);
 
     while(1)
     {

@@ -318,27 +318,15 @@ esp_err_t getWord(char *word, int wordSize)
 char graphicToChar(uint64_t graphic)
 {   
     // Check if graphic is a letter
-    for(uint8_t index = 0; index < ALPHABET_COUNT; index++)
+    for(uint8_t index = 0; index < TOTAL_NUM_OF_CHARACRERS; index++)
     {   
         // Also account for the inverted graphic (aka the cursor)
-        if((graphic == graphicsLetter[index]) || (graphic == ~graphicsLetter[index]))
+        if((graphic == graphicCharMap[index].graphic) || (graphic == ~graphicCharMap[index].graphic))
         {
-            return 'A' + index;
+            return graphicCharMap[index].character;
         }
     }
-
-    // Check if cursor is on a special character
-    switch(graphic)
-    {
-    case GRAPHIC_NO_SELECTION:
-    case ~GRAPHIC_NO_SELECTION:
-        return '-';
-        break;
     
-    default:
-        break;
-    }
-
     ESP_LOGD(MATRIX_DISP_TAG, "Invalid graphic: %llx", graphic);
 
     return '?';
@@ -465,31 +453,10 @@ esp_err_t resetCursor(void)
     return ret;
 }
 
-esp_err_t setCharacter(char character, uint8_t charPos)
+esp_err_t setCharacter(characters_t character, uint8_t charPos)
 {
     esp_err_t ret = ESP_OK;
     uint64_t graphic = 0;
-
-    // Check if the character is a letter
-    if((character >= 'A') && (character <= 'Z'))
-    {
-        graphic = graphicsLetter[character - 'A'];
-    }
-    else
-    {
-        // Check if the character is a special character
-        switch(character)
-        {
-        case '-':
-            graphic = GRAPHIC_NO_SELECTION;
-            break;
-        
-        default:
-            ESP_LOGE(MATRIX_DISP_TAG, "Invalid character: %c", character);
-            return ESP_ERR_INVALID_ARG;
-            break;
-        }
-    }
 
     // Check if the character position is valid
     if(charPos >= CASCADE_SIZE)
@@ -497,6 +464,8 @@ esp_err_t setCharacter(char character, uint8_t charPos)
         ESP_LOGE(MATRIX_DISP_TAG, "Invalid character position: %d", charPos);
         return ESP_ERR_INVALID_ARG;
     }
+
+    graphic = graphicCharMap[character].graphic;
 
     // Set the character
     segmentStates[UPPER_DISPLAY][charPos] = graphic;
