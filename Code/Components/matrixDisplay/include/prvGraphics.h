@@ -7,19 +7,19 @@
 #include <stdint.h>
 #include "matrixDisplay.h"
 
-#define TOTAL_NUM_OF_CHARACRERS  (ALPHABET_COUNT + SPECIAL_CHARACTERS_COUNT)
+#define TOTAL_NUM_OF_SYMBOLS  (ALPHABET_COUNT + SPECIAL_SYMBOLS_COUNT)
 
 typedef struct {
     uint64_t graphic;
     char character;
-} graphicCharMap_t;
+} graphicSymbolMap_t;
 
 /*-----------------------------------------------------------
 GRAPHICS
 ------------------------------------------------------------*/
 
 //A - Z (MUST BE IN ORDER)
-const graphicCharMap_t graphicCharMap[] = {
+const graphicSymbolMap_t graphicSymbolMap[] = {
     // Letters
     {0x0033333f33331e0c, 'A'},
     {0x003f66663e66663f, 'B'},
@@ -48,11 +48,16 @@ const graphicCharMap_t graphicCharMap[] = {
     {0x001e0c0c1e333333, 'Y'},
     {0x007f664c1831637f, 'Z'},
 
-    // Special Characters
+    // Special Symbols
     {0x0000003c00000000, '-'},
-    {0x3c42a59999a5423c, '%'}  // circle with X
+    {0x3c42a59999a5423c, '%'},  // circle with X
+    {0x000c000c1830331e, '?'},
+    {0x040e1f3360c08000, '/'},  // checkmark
+    {0x061e7efe7e1e0600, '>'},  // right arrow 
+    {0x60787e7f7e786000, '<'},  // left arrow
+    {0x40f8f8581a1f1f02, '&'}   // "uno reverse" symbol
 };
-static_assert(TOTAL_NUM_OF_CHARACRERS == (sizeof(graphicCharMap) / sizeof(graphicCharMap_t)), "TOTAL_NUM_OF_CHARACRERS does not match the number of elements in graphicCharMap");
+static_assert(TOTAL_NUM_OF_SYMBOLS == (sizeof(graphicSymbolMap) / sizeof(graphicSymbolMap_t)), "TOTAL_NUM_OF_SYMBOLS does not match the number of elements in graphicSymbolMap");
 
 //WORDn\nSEEK!
 const uint64_t dispWordNSeek[] = {
@@ -68,21 +73,19 @@ const uint64_t dispWordNSeek[] = {
     0x180018183c3c1800
 };
 
-//-----/n<ZAB>
+//-----/n?????
 const uint64_t dispEmptyBoard[] = {
     0x0000003c00000000,
     0x0000003c00000000,
     0x0000003c00000000,
     0x0000003c00000000,
     0x0000003c00000000,
-    0x60787e7f7e786000,
-    0x007f664c1831637f,
-    0x0033333f33331e0c,
-    0x003f66663e66663f,
-    0x061e7efe7e1e0600
+    0x000c000c1830331e,
+    0x000c000c1830331e,
+    0x000c000c1830331e,
+    0x000c000c1830331e,
+    0x000c000c1830331e,
 };
-
-
 
 /*-----------------------------------------------------------
 ANIMATIONS

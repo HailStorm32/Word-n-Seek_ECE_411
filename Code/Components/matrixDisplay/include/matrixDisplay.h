@@ -51,14 +51,21 @@ typedef enum
     Z,
     ALPHABET_COUNT,
 
-    SPECIAL_CHARACTERS_START,
-    NO_SELECTION = SPECIAL_CHARACTERS_START,
+    SPECIAL_SYMBOLS_START,
+    NO_SELECTION = SPECIAL_SYMBOLS_START - 1,
     INCORRECT,
-    SPECIAL_CHARACTERS_END,
+    UNKNOWN,
+    CORRECT,
+    RIGHT_ARROW,
+    LEFT_ARROW,
+    SWAPP_ARROWS,
+    SPECIAL_SYMBOLS_END,
     
-    SPECIAL_CHARACTERS_COUNT = SPECIAL_CHARACTERS_END - SPECIAL_CHARACTERS_START
+    SPECIAL_SYMBOLS_COUNT = SPECIAL_SYMBOLS_END - SPECIAL_SYMBOLS_START + 1,
 
-} characters_t;
+    INVALID_SYMBOL = ALPHABET_COUNT + SPECIAL_SYMBOLS_COUNT + 1
+
+} symbols_t;
 
 extern uint64_t segmentStates[NUM_DISPLAYS][CASCADE_SIZE];
 
@@ -78,6 +85,38 @@ void clearDisplay(display_t display);
 
 /*
 * Description:
+*      Convverts the given character to a symbol type
+* 
+* Arguments:
+*     char character: The character to convert
+* 
+* Returns:
+*      symbols_t: The symbol type of the character
+*/
+symbols_t charToSymbol(char character);
+
+
+/*
+* Description:
+*   Displays a graphic accross all displays
+*     
+*   NOTE:
+*      Must contain enough frames to fill all segments
+*      Graphic is displayed starting from the far left 
+*      of the top display and moves to the right
+*
+* Arguments:
+*      uint64_t *graphic: Pointer to graphic array
+*      int size: Size of the graphic array
+*
+* Returns:
+*      esp_err_t: ESP_OK if the graphic was displayed successfully
+*/
+esp_err_t displayFullGraphic(const uint64_t *graphic, const int size);
+
+
+/*
+* Description:
 *      Initializes the display and sets the display to the starting position
 * 
 * Arguments:
@@ -87,6 +126,19 @@ void clearDisplay(display_t display);
 *      esp_err_t: ESP_OK if the display was initialized successfully
 */
 esp_err_t display_init(void);
+
+
+/*
+* Description:
+*     Enables the cursor 
+* 
+* Arguments:
+*     None
+* 
+* Returns:
+*      None
+*/
+void enableCursor(void);
 
 
 /*
@@ -101,6 +153,19 @@ esp_err_t display_init(void);
 *      '?' if the cursor is not on valid a character
 */
 char getCharAtCursor(void);
+
+/*
+* Description:
+*      Returns the current cursor position
+*      Just the segment, not the display
+* 
+* Arguments:
+*     None
+* 
+* Returns:
+*      uint8_t: The cursor position
+*/
+uint8_t getCursorPos(void);
 
 
 /*
@@ -133,7 +198,33 @@ esp_err_t moveCursor(direction_t direction);
 
 /*
 * Description:
-*      Resets the cursor to the starting position (bottom middle)
+*      Just like moveCursor but moves the cursor multiple times
+* 
+* Arguments:
+*     direction_t direction: The direction to move the cursor
+*     uint8_t numMoves: The number of times to move the cursor
+* 
+* Returns:
+*      esp_err_t: ESP_OK if the cursor was moved successfully
+*/
+esp_err_t moveCursorMultiple(direction_t direction, uint8_t numMoves);
+
+
+/*
+* Description:
+*   Resets the board to the starting position
+*   
+* Arguments:
+*      None
+*
+* Returns:
+*      esp_err_t: ESP_OK if board was reset successfully
+*/
+esp_err_t resetBoard(void);
+
+/*
+* Description:
+*      Resets the cursor to the starting position (top middle)
 * 
 * Arguments:
 *     None
@@ -145,13 +236,38 @@ esp_err_t resetCursor(void);
 
 /*
 * Description:
-*      sets the segment to the character
+*      Sets the brightness of the display
 * 
 * Arguments:
-*     characters_t character: The character to display
-*     uint8_t charPos: The segment to display the character (zero indexed)
+*     uint8_t brightness: The brightness to set the display
 * 
 * Returns:
-*      esp_err_t: ESP_OK if the character was set successfully
+*      None
 */
-esp_err_t setCharacter(characters_t character, uint8_t charPos);
+void setBrightness(uint8_t brightness);
+
+/*
+* Description:
+*      sets the segment to the symbol
+* 
+* Arguments:
+*     symbols_t symbol: The symbol to display
+*     display_t display: The display to set the symbol
+*     uint8_t charPos: The segment to display the symbol (zero indexed)
+* 
+* Returns:
+*      esp_err_t: ESP_OK if the symbol was set successfully
+*/
+esp_err_t setSymbol(symbols_t symbol, display_t display, uint8_t charPos);
+
+/*
+* Description:
+*      Toggle the cursor off
+* 
+* Arguments:
+*     None
+* 
+* Returns:
+*     None
+*/
+void disableCursor(void);
