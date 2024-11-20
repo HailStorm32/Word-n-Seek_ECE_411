@@ -109,19 +109,6 @@ esp_err_t displayFullGraphic(const uint64_t *graphic, const int size);
 */
 char graphicToChar(uint64_t graphic);
 
-
-/*
-* Description:
-*   Resets the board to the starting position
-*   
-* Arguments:
-*      None
-*
-* Returns:
-*      esp_err_t: ESP_OK if board was reset successfully
-*/
-esp_err_t resetBoard(void);
-
 /*-----------------------------------------------------------
 Functions
 ------------------------------------------------------------*/
@@ -265,10 +252,10 @@ esp_err_t display_init(void)
     // Diplay the WORD n SEEK! graphic
     ESP_ERROR_CHECK(displayFullGraphic(dispWordNSeek, sizeof(dispWordNSeek)));
 
-    vTaskDelay(pdMS_TO_TICKS(5000));
+    // vTaskDelay(pdMS_TO_TICKS(5000));
 
-    // Reset the board
-    resetBoard();
+    // // Reset the board
+    // resetBoard();
 
     return ESP_OK;
 }
@@ -276,6 +263,11 @@ esp_err_t display_init(void)
 char getCharAtCursor(void)
 {
     return graphicToChar(segmentStates[cursor.curDisplay][cursor.curSegment]);
+}
+
+uint8_t getCursorPos(void)
+{
+    return cursor.curSegment;
 }
 
 esp_err_t getWord(char *word, int wordSize)
@@ -414,6 +406,18 @@ esp_err_t moveCursor(direction_t direction)
     return ret;
 }
 
+esp_err_t moveCursorMultiple(direction_t direction, uint8_t numMoves)
+{
+    esp_err_t ret = ESP_OK;
+
+    for(uint8_t move = 0; move < numMoves; move++)
+    {
+        ret |= moveCursor(direction);
+    }
+
+    return ret;
+}
+
 esp_err_t resetBoard(void)
 {
     esp_err_t ret = ESP_OK;
@@ -441,7 +445,7 @@ esp_err_t resetCursor(void)
     }
 
     // Reset the cursor
-    cursor.curDisplay = LOWER_DISPLAY;
+    cursor.curDisplay = UPPER_DISPLAY;
     cursor.curSegment = 2;
 
     // Display the new cursor

@@ -102,6 +102,19 @@ esp_err_t display_init(void);
 */
 char getCharAtCursor(void);
 
+/*
+* Description:
+*      Returns the current cursor position
+*      Just the segment, not the display
+* 
+* Arguments:
+*     None
+* 
+* Returns:
+*      uint8_t: The cursor position
+*/
+uint8_t getCursorPos(void);
+
 
 /*
 * Description:
@@ -130,6 +143,32 @@ esp_err_t getWord(char *word, int wordSize);
 */
 esp_err_t moveCursor(direction_t direction);
 
+
+/*
+* Description:
+*      Just like moveCursor but moves the cursor multiple times
+* 
+* Arguments:
+*     direction_t direction: The direction to move the cursor
+*     uint8_t numMoves: The number of times to move the cursor
+* 
+* Returns:
+*      esp_err_t: ESP_OK if the cursor was moved successfully
+*/
+esp_err_t moveCursorMultiple(direction_t direction, uint8_t numMoves);
+
+
+/*
+* Description:
+*   Resets the board to the starting position
+*   
+* Arguments:
+*      None
+*
+* Returns:
+*      esp_err_t: ESP_OK if board was reset successfully
+*/
+esp_err_t resetBoard(void);
 
 /*
 * Description:
