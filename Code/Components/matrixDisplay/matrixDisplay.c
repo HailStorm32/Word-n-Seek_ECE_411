@@ -470,7 +470,7 @@ esp_err_t resetCursor(void)
     return ret;
 }
 
-esp_err_t setSymbol(symbols_t character, uint8_t charPos)
+esp_err_t setSymbol(symbols_t character, display_t display, uint8_t charPos)
 {
     esp_err_t ret = ESP_OK;
     uint64_t graphic = 0;
@@ -485,15 +485,35 @@ esp_err_t setSymbol(symbols_t character, uint8_t charPos)
     graphic = graphicSymbolMap[character].graphic;
 
     // If the cursor is on the segment, invert the graphic
-    if(cursor.isValid && (cursor.curDisplay == UPPER_DISPLAY) && (cursor.curSegment == charPos))
+    if(cursor.isValid && (cursor.curSegment == charPos))
     {
         graphic = ~graphic;
     }
 
-    // Set the character
-    segmentStates[UPPER_DISPLAY][charPos] = graphic;
+    // Set the character on the chosen display and segment
+    switch(display)
+    {
+    case LOWER_DISPLAY:
+    case UPPER_DISPLAY:
+        // Set the character
+        segmentStates[display][charPos] = graphic;
+        
+        ret |= max7219_draw_image_8x8(&displays[display]->dev, charPos * 8, &graphic);
+        break;
 
-    ret |= max7219_draw_image_8x8(&displays[UPPER_DISPLAY]->dev, charPos * 8, &graphic);
+    case ALL_DISPLAYS:
+        for(uint8_t disp = 0; disp < NUM_DISPLAYS; disp++)
+        {
+            // Set the character
+            segmentStates[disp][charPos] = graphic;
+
+            ret |= max7219_draw_image_8x8(&displays[disp]->dev, charPos * 8, &graphic);
+        }
+        break;
+    default:
+        ESP_LOGE(MATRIX_DISP_TAG, "Invalid display");
+        break;
+    }
 
     return ret;
 }

@@ -23,6 +23,21 @@ Literal Constants
 #define EXIT_BTN        GPIO_BTN_D
 #define EXIT_BTN_LED    GPIO_BTN_D_LED
 
+#define CAROUSEL_START_SEGMENT  1
+#define CAROUSEL_MID_SEGMENT    2
+#define CAROUSEL_END_SEGMENT    3
+#define CAROUSEL_SLIDER_INIT_STRT  ALPHABET_COUNT - 1
+#define CAROUSEL_SLIDER_INIT_MID   0
+#define CAROUSEL_SLIDER_INIT_END   1
+
+/*-----------------------------------------------------------
+Memory Constants
+------------------------------------------------------------*/
+
+const char carousalCharacters[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 
+                                   'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 
+                                   'U', 'V', 'W', 'X', 'Y', 'Z'};
+
 /*-----------------------------------------------------------
 Types
 ------------------------------------------------------------*/
@@ -35,6 +50,13 @@ typedef enum
     RESULTS
 } wordGuessGameStates_t;
 
+typedef struct
+{
+    uint8_t start;
+    uint8_t mid;
+    uint8_t end;
+}carousalSliderPos_t;
+
 /*-----------------------------------------------------------
 Gobals
 ------------------------------------------------------------*/
@@ -45,19 +67,71 @@ Statics
 
 static char wordGuess[WORD_SIZE] = {'-'};
 static wordGuessGameStates_t gameState = INIT;
+carousalSliderPos_t carousalSlider = {CAROUSEL_SLIDER_INIT_STRT, CAROUSEL_SLIDER_INIT_MID, CAROUSEL_SLIDER_INIT_END};
 
 /*-----------------------------------------------------------
 Local Function Prototypes
 ------------------------------------------------------------*/
 
+/*
+* Description:
+*      Cycles the carousal in the given direction
+* 
+* Arguments:
+*     direction_t direction: The direction to cycle the carousal
+* 
+* Returns:
+*      esp_err_t: ESP_OK if the carousal was cycled successfully
+*/
+esp_err_t cycleCarousal(direction_t direction);
+
+
+
 /*-----------------------------------------------------------
 Functions
 ------------------------------------------------------------*/
+
+esp_err_t cycleCarousal(direction_t direcion)
+{
+    esp_err_t ret = ESP_OK;
+
+    switch(direcion)
+    {
+    case LEFT:
+        // Move the carousal to the left
+        carousalSlider.start = (carousalSlider.start - 1 + ALPHABET_COUNT) % ALPHABET_COUNT;
+        carousalSlider.mid = (carousalSlider.mid - 1 + ALPHABET_COUNT) % ALPHABET_COUNT;
+        carousalSlider.end = (carousalSlider.end - 1 + ALPHABET_COUNT) % ALPHABET_COUNT;
+        break;
+    case RIGHT:
+        // Move the carousal to the right
+        carousalSlider.start = (carousalSlider.start + 1) % ALPHABET_COUNT;
+        carousalSlider.mid = (carousalSlider.mid + 1) % ALPHABET_COUNT;
+        carousalSlider.end = (carousalSlider.end + 1) % ALPHABET_COUNT;
+        break;
+    default:
+        ESP_LOGE(LOG_TAG, "Invalid direction given");
+        break;
+    }
+
+    // Display the carousal
+    ret |= setSymbol(charToSymbol(carousalCharacters[carousalSlider.start]), LOWER_DISPLAY, CAROUSEL_START_SEGMENT);
+    ret |= setSymbol(charToSymbol(carousalCharacters[carousalSlider.mid]), LOWER_DISPLAY, CAROUSEL_MID_SEGMENT);
+    ret |= setSymbol(charToSymbol(carousalCharacters[carousalSlider.end]), LOWER_DISPLAY, CAROUSEL_END_SEGMENT);
+
+    return ret;
+}
+
 esp_err_t wordGuessGameReset(void)
 {
     esp_err_t ret = ESP_OK;
 
     ESP_LOGI(LOG_TAG, "Reseting word guess game");
+
+    // Reset the carousal slider
+    carousalSlider.start = CAROUSEL_SLIDER_INIT_STRT;
+    carousalSlider.mid = CAROUSEL_SLIDER_INIT_MID;
+    carousalSlider.end = CAROUSEL_SLIDER_INIT_END;
 
     // Reset the board
     ret |= resetBoard();
@@ -78,6 +152,7 @@ esp_err_t wordGuessGameStart(void)
     uint32_t ioNum;
     char seclectedChar;
     uint8_t cursorPos = 2;
+    uint8_t cursorPos2 = 2; // TODO: Find a better name
     symbols_t convertedChar;
 
     ESP_LOGI(LOG_TAG, "Starting word guess game");
@@ -150,7 +225,7 @@ esp_err_t wordGuessGameStart(void)
                         if(convertedChar != INVALID_SYMBOL)
                         {
                             // Set the character on the display
-                            setSymbol(convertedChar, cursorPos);
+                            setSymbol(convertedChar, UPPER_DISPLAY, cursorPos);
 
                             // Reset the cursor
                             resetCursor();
@@ -237,7 +312,7 @@ esp_err_t wordGuessGameStart(void)
                         // Set the character on the display only if the symbol is valid
                         if(convertedChar != INVALID_SYMBOL)
                         {
-                            setSymbol(convertedChar, cursorPos);
+                            setSymbol(convertedChar, UPPER_DISPLAY, cursorPos);
                         }
                         else
                         {
@@ -246,7 +321,7 @@ esp_err_t wordGuessGameStart(void)
 
                         break;
                     case RESULTS:
-                        /* code */
+                        // Do nothing, no functionality for this button in this state
                         break;
                     default:
                         ESP_LOGE(LOG_TAG, "Given invalid game state");
@@ -297,7 +372,19 @@ esp_err_t wordGuessGameStart(void)
                         // Do nothing, no functionality for this button in this state
                         break;
                     case LETTER_SELECTION:
-                        moveCursor(LEFT);
+                        // Get the cursor position
+                        cursorPos2 = getCursorPos();
+
+                        if(cursorPos2 == CAROUSEL_START_SEGMENT)
+                        {
+                            // Move the carousal to the left
+                            cycleCarousal(LEFT);
+                        }
+                        else
+                        {
+                            // Move the cursor to the left
+                            moveCursor(LEFT);
+                        }
                         break;
                     case LETTER_EDIT:
                         moveCursor(LEFT);
@@ -321,7 +408,19 @@ esp_err_t wordGuessGameStart(void)
                         // Do nothing, no functionality for this button in this state
                         break;
                     case LETTER_SELECTION:
-                        moveCursor(RIGHT);
+                        // Get the cursor position
+                        cursorPos2 = getCursorPos();
+
+                        if(cursorPos2 == CAROUSEL_END_SEGMENT)
+                        {
+                            // Move the carousal to the right
+                            cycleCarousal(RIGHT);
+                        }
+                        else
+                        {
+                            // Move the cursor to the right
+                            moveCursor(RIGHT);
+                        }
                         break;
                     case LETTER_EDIT:
                         moveCursor(RIGHT);

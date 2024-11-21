@@ -58,7 +58,7 @@ typedef enum
     
     SPECIAL_SYMBOLS_COUNT = SPECIAL_SYMBOLS_END - SPECIAL_SYMBOLS_START,
 
-    INVALID_SYMBOL
+    INVALID_SYMBOL = ALPHABET_COUNT + SPECIAL_SYMBOLS_COUNT + 1
 
 } symbols_t;
 
@@ -203,9 +203,10 @@ esp_err_t resetCursor(void);
 * 
 * Arguments:
 *     symbols_t symbol: The character to display
+*     display_t display: The display to set the symbol
 *     uint8_t charPos: The segment to display the symbol (zero indexed)
 * 
 * Returns:
 *      esp_err_t: ESP_OK if the symbol was set successfully
 */
-esp_err_t setSymbol(symbols_t character, uint8_t charPos);
+esp_err_t setSymbol(symbols_t character, display_t display, uint8_t charPos);
