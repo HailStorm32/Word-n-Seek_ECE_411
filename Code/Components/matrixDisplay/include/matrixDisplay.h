@@ -51,14 +51,16 @@ typedef enum
     Z,
     ALPHABET_COUNT,
 
-    SPECIAL_CHARACTERS_START,
-    NO_SELECTION = SPECIAL_CHARACTERS_START,
+    SPECIAL_SYMBOLS_START,
+    NO_SELECTION = SPECIAL_SYMBOLS_START,
     INCORRECT,
-    SPECIAL_CHARACTERS_END,
+    SPECIAL_SYMBOLS_END,
     
-    SPECIAL_CHARACTERS_COUNT = SPECIAL_CHARACTERS_END - SPECIAL_CHARACTERS_START
+    SPECIAL_SYMBOLS_COUNT = SPECIAL_SYMBOLS_END - SPECIAL_SYMBOLS_START,
 
-} characters_t;
+    INVALID_SYMBOL
+
+} symbols_t;
 
 extern uint64_t segmentStates[NUM_DISPLAYS][CASCADE_SIZE];
 
@@ -74,7 +76,6 @@ extern uint64_t segmentStates[NUM_DISPLAYS][CASCADE_SIZE];
 *      None
 */
 void clearDisplay(display_t display);
-
 
 /*
 * Description:
@@ -187,10 +188,10 @@ esp_err_t resetCursor(void);
 *      sets the segment to the character
 * 
 * Arguments:
-*     characters_t character: The character to display
+*     symbols_t character: The character to display
 *     uint8_t charPos: The segment to display the character (zero indexed)
 * 
 * Returns:
 *      esp_err_t: ESP_OK if the character was set successfully
 */
-esp_err_t setCharacter(characters_t character, uint8_t charPos);
+esp_err_t setCharacter(symbols_t character, uint8_t charPos);

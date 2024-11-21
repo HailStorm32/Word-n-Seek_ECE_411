@@ -310,12 +310,12 @@ esp_err_t getWord(char *word, int wordSize)
 char graphicToChar(uint64_t graphic)
 {   
     // Check if graphic is a letter
-    for(uint8_t index = 0; index < TOTAL_NUM_OF_CHARACRERS; index++)
+    for(uint8_t index = 0; index < TOTAL_NUM_OF_SYMBOLS; index++)
     {   
         // Also account for the inverted graphic (aka the cursor)
-        if((graphic == graphicCharMap[index].graphic) || (graphic == ~graphicCharMap[index].graphic))
+        if((graphic == graphicSymbolMap[index].graphic) || (graphic == ~graphicSymbolMap[index].graphic))
         {
-            return graphicCharMap[index].character;
+            return graphicSymbolMap[index].character;
         }
     }
     
@@ -457,7 +457,7 @@ esp_err_t resetCursor(void)
     return ret;
 }
 
-esp_err_t setCharacter(characters_t character, uint8_t charPos)
+esp_err_t setCharacter(symbols_t character, uint8_t charPos)
 {
     esp_err_t ret = ESP_OK;
     uint64_t graphic = 0;
@@ -469,7 +469,7 @@ esp_err_t setCharacter(characters_t character, uint8_t charPos)
         return ESP_ERR_INVALID_ARG;
     }
 
-    graphic = graphicCharMap[character].graphic;
+    graphic = graphicSymbolMap[character].graphic;
 
     // Set the character
     segmentStates[UPPER_DISPLAY][charPos] = graphic;

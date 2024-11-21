@@ -139,7 +139,15 @@ esp_err_t wordGuessGameStart(void)
                         gameState = LETTER_EDIT;
                         break;
                     case LETTER_SELECTION:
-                        /* code */
+                        // Get the selected character
+                        seclectedChar = getCharAtCursor();
+
+                        // Set the selected character
+                        wordGuess[cursorPos] = seclectedChar;
+
+                        // Update the display
+                        
+
                         break;
                     case LETTER_EDIT:
                         // Set the next game state
