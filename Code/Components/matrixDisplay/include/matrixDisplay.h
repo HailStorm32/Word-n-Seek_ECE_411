@@ -77,6 +77,20 @@ extern uint64_t segmentStates[NUM_DISPLAYS][CASCADE_SIZE];
 */
 void clearDisplay(display_t display);
 
+
+/*
+* Description:
+*      Convverts the given character to a symbol type
+* 
+* Arguments:
+*     char character: The character to convert
+* 
+* Returns:
+*      symbols_t: The symbol type of the character
+*/
+symbols_t charToSymbol(char character);
+
+
 /*
 * Description:
 *      Initializes the display and sets the display to the starting position
@@ -185,13 +199,13 @@ esp_err_t resetCursor(void);
 
 /*
 * Description:
-*      sets the segment to the character
+*      sets the segment to the symbol
 * 
 * Arguments:
-*     symbols_t character: The character to display
-*     uint8_t charPos: The segment to display the character (zero indexed)
+*     symbols_t symbol: The character to display
+*     uint8_t charPos: The segment to display the symbol (zero indexed)
 * 
 * Returns:
-*      esp_err_t: ESP_OK if the character was set successfully
+*      esp_err_t: ESP_OK if the symbol was set successfully
 */
-esp_err_t setCharacter(symbols_t character, uint8_t charPos);
+esp_err_t setSymbol(symbols_t character, uint8_t charPos);

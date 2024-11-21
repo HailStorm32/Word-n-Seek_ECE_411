@@ -137,6 +137,19 @@ void clearDisplay(display_t display)
     }
 }
 
+symbols_t charToSymbol(char character)
+{
+    for(uint8_t index = 0; index < TOTAL_NUM_OF_SYMBOLS; index++)
+    {
+        if(character == graphicSymbolMap[index].character)
+        {
+            return (symbols_t)index;
+        }
+    }
+
+    return INVALID_SYMBOL;
+}
+
 void correctCursorPos(void)
 {   
     // Only do check if cursor is on the lower display
@@ -457,7 +470,7 @@ esp_err_t resetCursor(void)
     return ret;
 }
 
-esp_err_t setCharacter(symbols_t character, uint8_t charPos)
+esp_err_t setSymbol(symbols_t character, uint8_t charPos)
 {
     esp_err_t ret = ESP_OK;
     uint64_t graphic = 0;
@@ -471,8 +484,15 @@ esp_err_t setCharacter(symbols_t character, uint8_t charPos)
 
     graphic = graphicSymbolMap[character].graphic;
 
+    // If the cursor is on the segment, invert the graphic
+    if(cursor.isValid && (cursor.curDisplay == UPPER_DISPLAY) && (cursor.curSegment == charPos))
+    {
+        graphic = ~graphic;
+    }
+
     // Set the character
     segmentStates[UPPER_DISPLAY][charPos] = graphic;
+
     ret |= max7219_draw_image_8x8(&displays[UPPER_DISPLAY]->dev, charPos * 8, &graphic);
 
     return ret;

@@ -64,6 +64,7 @@ esp_err_t wordGuessGameReset(void)
 
     // Reset the wordGuess 
     memset(wordGuess, '-', sizeof(wordGuess));
+    wordGuess[WORD_SIZE - 1] = '\0';
 
     // Reset the game state
     gameState = INIT;
@@ -77,12 +78,9 @@ esp_err_t wordGuessGameStart(void)
     uint32_t ioNum;
     char seclectedChar;
     uint8_t cursorPos = 2;
+    symbols_t convertedChar;
 
     ESP_LOGI(LOG_TAG, "Starting word guess game");
-
-    // setCharacter(E, 0);
-    // setCharacter(C, 1);
-    // setCharacter(E, 2);
 
     while(isRunning)
     {
@@ -104,7 +102,7 @@ esp_err_t wordGuessGameStart(void)
             break;
         case LETTER_EDIT:
             gpio_set_level(SELECT_BTN_LED, 1);
-            gpio_set_level(GUESS_BTN_LED, 0);
+            gpio_set_level(GUESS_BTN_LED, 1);
             gpio_set_level(DELETE_BTN_LED, 1);
             gpio_set_level(EXIT_BTN_LED, 1);
             break;
@@ -122,7 +120,7 @@ esp_err_t wordGuessGameStart(void)
 
         if(xQueueReceive(gpioEventQueue, &ioNum, portMAX_DELAY)) 
         {
-            printf("GPIO[%"PRIu32"] intr\n", ioNum);
+            // printf("GPIO[%"PRIu32"] intr\n", ioNum);
 
             if(ioNum == SELECT_BTN || ioNum == GUESS_BTN || ioNum == DELETE_BTN || ioNum == EXIT_BTN) 
             {
@@ -144,9 +142,26 @@ esp_err_t wordGuessGameStart(void)
 
                         // Set the selected character
                         wordGuess[cursorPos] = seclectedChar;
-
-                        // Update the display
                         
+                        // Convert the character to a symbol
+                        convertedChar = charToSymbol(seclectedChar);
+
+                        // Make sure the character is valid
+                        if(convertedChar != INVALID_SYMBOL)
+                        {
+                            // Set the character on the display
+                            setSymbol(convertedChar, cursorPos);
+
+                            // Reset the cursor
+                            resetCursor();
+
+                            // Set the next game state 
+                            gameState = LETTER_EDIT;
+                        }
+                        else
+                        {
+                            ESP_LOGE(LOG_TAG, "Invalid character selected");
+                        }
 
                         break;
                     case LETTER_EDIT:
@@ -206,10 +221,29 @@ esp_err_t wordGuessGameStart(void)
                         // Do nothing, no functionality for this button in this state
                         break;
                     case LETTER_SELECTION:
-                        /* code */
+                        // Do nothing, no functionality for this button in this state
+                        //TODO: maybe delete all characters in the word of the selected character
                         break;
                     case LETTER_EDIT:
-                        /* code */
+                        // Get cursor position
+                        cursorPos = getCursorPos();
+
+                        // Set the character to a dash
+                        wordGuess[cursorPos] = '-';
+
+                        // Convert the character to a symbol
+                        convertedChar = charToSymbol('-');
+
+                        // Set the character on the display only if the symbol is valid
+                        if(convertedChar != INVALID_SYMBOL)
+                        {
+                            setSymbol(convertedChar, cursorPos);
+                        }
+                        else
+                        {
+                            ESP_LOGE(LOG_TAG, "Invalid character selected");
+                        }
+
                         break;
                     case RESULTS:
                         /* code */
