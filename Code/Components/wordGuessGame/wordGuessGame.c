@@ -40,6 +40,12 @@ const char carousalCharacters[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 
                                    'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 
                                    'U', 'V', 'W', 'X', 'Y', 'Z'};
 
+const symbols_t carousalScreenStartState[] = {LEFT_ARROW, Z, A, B, RIGHT_ARROW};
+static_assert(CASCADE_SIZE == (sizeof(carousalScreenStartState) / sizeof(symbols_t)), "Invalid carousal start state size");
+
+const symbols_t resultsScreenStartState[] = {UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN};
+static_assert(CASCADE_SIZE == (sizeof(resultsScreenStartState) / sizeof(symbols_t)), "Invalid results start state size");
+
 /*-----------------------------------------------------------
 Types
 ------------------------------------------------------------*/
@@ -69,6 +75,8 @@ Statics
 
 static char wordToGuess[WORD_SIZE] = {'-'};
 static char guessedWord[WORD_SIZE] = {'-'};
+static symbols_t carousalScreenState[CASCADE_SIZE];
+static symbols_t resultScreenState[CASCADE_SIZE];
 static wordGuessGameStates_t gameState = INIT;
 carousalSliderPos_t carousalSlider = {CAROUSEL_SLIDER_INIT_STRT, CAROUSEL_SLIDER_INIT_MID, CAROUSEL_SLIDER_INIT_END};
 
@@ -88,6 +96,31 @@ Local Function Prototypes
 */
 esp_err_t cycleCarousal(direction_t direction);
 
+
+/*
+* Description:
+*      Displays the carousal on the lower display
+* 
+* Arguments:
+*     None
+* 
+* Returns:
+*      esp_err_t: ESP_OK if the carousal was displayed successfully
+*/
+esp_err_t displayCarousal(void);
+
+
+/*
+* Description:
+*      Displays the results on the lower display
+* 
+* Arguments:
+*     None
+* 
+* Returns:
+*      esp_err_t: ESP_OK if the results were displayed successfully
+*/
+esp_err_t displayResults(void);
 
 /*
 * Description:
@@ -138,16 +171,59 @@ esp_err_t cycleCarousal(direction_t direcion)
     return ret;
 }
 
+esp_err_t displayCarousal(void)
+{
+    esp_err_t ret = ESP_OK;
+
+    toggleCursor();
+
+    // Display the carousal
+    for(uint8_t segment = 0; segment < CASCADE_SIZE; segment++)
+    {
+        ret |= setSymbol(carousalScreenState[segment], LOWER_DISPLAY, segment);
+    }
+
+    toggleCursor();
+
+    return ret;
+}
+
+esp_err_t displayResults(void)
+{
+    esp_err_t ret = ESP_OK;
+
+    // Display the results
+    for(uint8_t segment = 0; segment < CASCADE_SIZE; segment++)
+    {
+        ret |= setSymbol(resultScreenState[segment], LOWER_DISPLAY, segment);
+    }
+
+    return ret;
+}
+
+void saveCarousalState(void)
+{
+    carousalScreenState[1] = charToSymbol(carousalCharacters[carousalSlider.start]);
+    carousalScreenState[2] = charToSymbol(carousalCharacters[carousalSlider.mid]);
+    carousalScreenState[3] = charToSymbol(carousalCharacters[carousalSlider.end]);
+}
+
 esp_err_t wordGuessGameReset(void)
 {
     esp_err_t ret = ESP_OK;
 
     ESP_LOGI(LOG_TAG, "Reseting word guess game");
 
+    // Reset the carousal
+    memcpy(carousalScreenState, carousalScreenStartState, sizeof(carousalScreenState));
+
     // Reset the carousal slider
     carousalSlider.start = CAROUSEL_SLIDER_INIT_STRT;
     carousalSlider.mid = CAROUSEL_SLIDER_INIT_MID;
     carousalSlider.end = CAROUSEL_SLIDER_INIT_END;
+
+    // Reset the results
+    memcpy(resultScreenState, resultsScreenStartState, sizeof(resultScreenState));
 
     // Reset the board
     ret |= resetBoard();
@@ -251,6 +327,12 @@ esp_err_t wordGuessGameStart(void)
                             // Re-enable the cursor
                             toggleCursor();
 
+                            // Save the carousal state
+                            saveCarousalState();
+
+                            // Display the result screen
+                            displayResults();
+
                             // Reset the cursor
                             resetCursor();
 
@@ -272,6 +354,8 @@ esp_err_t wordGuessGameStart(void)
 
                         // Get the cursor to the center
                         moveCursorMultiple(RIGHT, (2 - cursorPos + CASCADE_SIZE) % CASCADE_SIZE);
+
+                        displayCarousal();
 
                         moveCursor(DOWN);
                         break;
@@ -612,6 +696,9 @@ bool validateGuess(void)
     char guessResults[WORD_SIZE];
 
     // TODO: Add guess call
+
+    //TODO: create map to go from api result to symbol
+    
 
     return isCorrect;
  }

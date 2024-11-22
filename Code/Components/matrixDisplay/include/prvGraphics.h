@@ -50,7 +50,11 @@ const graphicSymbolMap_t graphicSymbolMap[] = {
 
     // Special Symbols
     {0x0000003c00000000, '-'},
-    {0x3c42a59999a5423c, '%'}  // circle with X
+    {0x3c42a59999a5423c, '%'},  // circle with X
+    {0x000c000c1830331e, '?'},
+    {0x040e1f3360c08000, '/'},  // checkmark
+    {0x061e7efe7e1e0600, '>'},  // right arrow 
+    {0x60787e7f7e786000, '<'}   // left arrow
 };
 static_assert(TOTAL_NUM_OF_SYMBOLS == (sizeof(graphicSymbolMap) / sizeof(graphicSymbolMap_t)), "TOTAL_NUM_OF_SYMBOLS does not match the number of elements in graphicSymbolMap");
 
@@ -68,21 +72,19 @@ const uint64_t dispWordNSeek[] = {
     0x180018183c3c1800
 };
 
-//-----/n<ZAB>
+//-----/n?????
 const uint64_t dispEmptyBoard[] = {
     0x0000003c00000000,
     0x0000003c00000000,
     0x0000003c00000000,
     0x0000003c00000000,
     0x0000003c00000000,
-    0x60787e7f7e786000,
-    0x007f664c1831637f,
-    0x0033333f33331e0c,
-    0x003f66663e66663f,
-    0x061e7efe7e1e0600
+    0x000c000c1830331e,
+    0x000c000c1830331e,
+    0x000c000c1830331e,
+    0x000c000c1830331e,
+    0x000c000c1830331e,
 };
-
-
 
 /*-----------------------------------------------------------
 ANIMATIONS

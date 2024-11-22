@@ -52,11 +52,15 @@ typedef enum
     ALPHABET_COUNT,
 
     SPECIAL_SYMBOLS_START,
-    NO_SELECTION = SPECIAL_SYMBOLS_START,
+    NO_SELECTION = SPECIAL_SYMBOLS_START - 1,
     INCORRECT,
+    UNKNOWN,
+    CORRECT,
+    RIGHT_ARROW,
+    LEFT_ARROW,
     SPECIAL_SYMBOLS_END,
     
-    SPECIAL_SYMBOLS_COUNT = SPECIAL_SYMBOLS_END - SPECIAL_SYMBOLS_START,
+    SPECIAL_SYMBOLS_COUNT = SPECIAL_SYMBOLS_END - SPECIAL_SYMBOLS_START + 1,
 
     INVALID_SYMBOL = ALPHABET_COUNT + SPECIAL_SYMBOLS_COUNT + 1
 
@@ -202,14 +206,14 @@ esp_err_t resetCursor(void);
 *      sets the segment to the symbol
 * 
 * Arguments:
-*     symbols_t symbol: The character to display
+*     symbols_t symbol: The symbol to display
 *     display_t display: The display to set the symbol
 *     uint8_t charPos: The segment to display the symbol (zero indexed)
 * 
 * Returns:
 *      esp_err_t: ESP_OK if the symbol was set successfully
 */
-esp_err_t setSymbol(symbols_t character, display_t display, uint8_t charPos);
+esp_err_t setSymbol(symbols_t symbol, display_t display, uint8_t charPos);
 
 /*
 * Description:

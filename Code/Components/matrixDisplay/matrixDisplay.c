@@ -20,7 +20,7 @@ Literal Constants
 #define LEFT_ARROW_SEGMENT  0
 #define RIGHT_ARROW_SEGMENT (CASCADE_SIZE - 1)
 
-#define MATRIX_DISP_TAG "matrix_display"
+#define LOG_TAG "matrix_display"
 
 
 /*-----------------------------------------------------------
@@ -132,7 +132,7 @@ void clearDisplay(display_t display)
         break;
 
     default:
-        ESP_LOGE(MATRIX_DISP_TAG, "Invalid display");
+        ESP_LOGE(LOG_TAG, "Invalid display");
         break;
     }
 }
@@ -179,14 +179,14 @@ esp_err_t displayFullGraphic(const uint64_t *graphic, const int size)
     // Check if pointer is valid
     if(graphic == NULL)
     {
-        ESP_LOGE(MATRIX_DISP_TAG, "Invalid graphic pointer");
+        ESP_LOGE(LOG_TAG, "Invalid graphic pointer");
         return ESP_ERR_INVALID_ARG;
     }
 
     // Check if there are enough frames to fill all segments
     if(size / sizeof(uint64_t) < NUM_DISPLAYS * CASCADE_SIZE)
     {
-        ESP_LOGE(MATRIX_DISP_TAG, "Not enough frames to fill all segments");
+        ESP_LOGE(LOG_TAG, "Not enough frames to fill all segments");
         return ESP_ERR_INVALID_SIZE;
     }
 
@@ -232,7 +232,7 @@ esp_err_t display_init(void)
     // Initialize the displays
     for(uint8_t display = 0; display < NUM_DISPLAYS; display++)
     {
-        ESP_LOGI(MATRIX_DISP_TAG, "Initializing display %d", display);
+        ESP_LOGI(LOG_TAG, "Initializing display %d", display);
         max7219_t *dev = &displays[display]->dev;
 
         // Configure display
@@ -291,22 +291,22 @@ esp_err_t getWord(char *word, int wordSize)
     // Check if the word array is valid
     if(word == NULL)
     {
-        ESP_LOGE(MATRIX_DISP_TAG, "Invalid word array");
+        ESP_LOGE(LOG_TAG, "Invalid word array");
         return ESP_ERR_INVALID_ARG;
     }
 
     // Check if the word array is large enough (including null terminator)
-    if(wordSize < CASCADE_SIZE + 1)
+    if(wordSize < CASCADE_SIZE)
     {
-        ESP_LOGE(MATRIX_DISP_TAG, "Word array is too small");
+        ESP_LOGE(LOG_TAG, "Word array is too small");
         return ESP_ERR_INVALID_SIZE;
     }
 
     // Get the word in graphic form
     memcpy(wordGraphicArray, segmentStates[UPPER_DISPLAY], CASCADE_SIZE * sizeof(uint64_t));
 
-    // ESP_LOG_BUFFER_HEXDUMP(MATRIX_DISP_TAG, wordGraphicArray, wordSize * sizeof(uint64_t), ESP_LOG_DEBUG);
-    // ESP_LOG_BUFFER_HEXDUMP(MATRIX_DISP_TAG, segmentStates[UPPER_DISPLAY], CASCADE_SIZE * sizeof(uint64_t), ESP_LOG_DEBUG);
+    // ESP_LOG_BUFFER_HEXDUMP(LOG_TAG, wordGraphicArray, wordSize * sizeof(uint64_t), ESP_LOG_DEBUG);
+    // ESP_LOG_BUFFER_HEXDUMP(LOG_TAG, segmentStates[UPPER_DISPLAY], CASCADE_SIZE * sizeof(uint64_t), ESP_LOG_DEBUG);
 
     // Convert the graphic to characters
     for(uint8_t segment = 0; segment < CASCADE_SIZE; segment++)
@@ -315,7 +315,7 @@ esp_err_t getWord(char *word, int wordSize)
     }
 
     // Add null terminator
-    word[CASCADE_SIZE + 1] = '\0';
+    word[CASCADE_SIZE] = '\0';
 
     return ret;
 }
@@ -332,7 +332,7 @@ char graphicToChar(uint64_t graphic)
         }
     }
     
-    ESP_LOGD(MATRIX_DISP_TAG, "Invalid graphic: %llx", graphic);
+    ESP_LOGD(LOG_TAG, "Invalid graphic: %llx", graphic);
 
     return '?';
 }
@@ -345,7 +345,7 @@ esp_err_t moveCursor(direction_t direction)
     // Check if the cursor is valid
     if(!cursor.isValid)
     {
-        ESP_LOGD(MATRIX_DISP_TAG, "Cursor is not valid");
+        ESP_LOGD(LOG_TAG, "Cursor is not valid");
         return ESP_OK;
     }
 
@@ -409,7 +409,7 @@ esp_err_t moveCursor(direction_t direction)
         break;
     
     default:
-        ESP_LOGE(MATRIX_DISP_TAG, "Invalid cursor direction");
+        ESP_LOGE(LOG_TAG, "Invalid cursor direction");
         ret = ESP_ERR_NOT_SUPPORTED;
         break;
     }
@@ -483,29 +483,31 @@ esp_err_t resetCursor(void)
     return ret;
 }
 
-esp_err_t setSymbol(symbols_t character, display_t display, uint8_t charPos)
+esp_err_t setSymbol(symbols_t symbol, display_t display, uint8_t charPos)
 {
     esp_err_t ret = ESP_OK;
     uint64_t graphic = 0;
 
-    // Check if the character position is valid
+    // Check if the symbol position is valid
     if(charPos >= CASCADE_SIZE)
     {
-        ESP_LOGE(MATRIX_DISP_TAG, "Invalid character position: %d", charPos);
+        ESP_LOGE(LOG_TAG, "Invalid symbol position: %d", charPos);
         return ESP_ERR_INVALID_ARG;
     }
 
-    graphic = graphicSymbolMap[character].graphic;
+    graphic = graphicSymbolMap[symbol].graphic;
+
+    // ESP_LOGD(LOG_TAG, "Graphic: %llx", graphic);
 
     // If the cursor is on the segment, invert the graphic
     if(cursor.isValid && (cursor.curSegment == charPos))
     {   
-        ESP_LOGD(MATRIX_DISP_TAG, "segment: %d", charPos);
-        ESP_LOGD(MATRIX_DISP_TAG, "Inverting graphic");
+        ESP_LOGD(LOG_TAG, "segment: %d", charPos);
+        ESP_LOGD(LOG_TAG, "Inverting graphic");
         graphic = ~graphic;
     }
 
-    // Set the character on the chosen display and segment
+    // Set the symbol on the chosen display and segment
     switch(display)
     {
     case LOWER_DISPLAY:
@@ -526,7 +528,7 @@ esp_err_t setSymbol(symbols_t character, display_t display, uint8_t charPos)
         }
         break;
     default:
-        ESP_LOGE(MATRIX_DISP_TAG, "Invalid display");
+        ESP_LOGE(LOG_TAG, "Invalid display");
         break;
     }
 
