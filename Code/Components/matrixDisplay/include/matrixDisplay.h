@@ -210,3 +210,15 @@ esp_err_t resetCursor(void);
 *      esp_err_t: ESP_OK if the symbol was set successfully
 */
 esp_err_t setSymbol(symbols_t character, display_t display, uint8_t charPos);
+
+/*
+* Description:
+*      Toggle the cursor on and off
+* 
+* Arguments:
+*     None
+* 
+* Returns:
+*     None
+*/
+void toggleCursor(void);

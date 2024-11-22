@@ -342,6 +342,13 @@ esp_err_t moveCursor(direction_t direction)
     esp_err_t ret = ESP_OK;
     uint64_t * currentSegmentState;
 
+    // Check if the cursor is valid
+    if(!cursor.isValid)
+    {
+        ESP_LOGD(MATRIX_DISP_TAG, "Cursor is not valid");
+        return ESP_OK;
+    }
+
     // Get pointer to the current segment state
     currentSegmentState = &segmentStates[cursor.curDisplay][cursor.curSegment];
 
@@ -423,10 +430,16 @@ esp_err_t moveCursorMultiple(direction_t direction, uint8_t numMoves)
 {
     esp_err_t ret = ESP_OK;
 
+    // Disable the cursor to prevent flickering
+    toggleCursor();
+
     for(uint8_t move = 0; move < numMoves; move++)
     {
         ret |= moveCursor(direction);
     }
+
+    // Enable the cursor
+    toggleCursor();
 
     return ret;
 }
@@ -486,7 +499,9 @@ esp_err_t setSymbol(symbols_t character, display_t display, uint8_t charPos)
 
     // If the cursor is on the segment, invert the graphic
     if(cursor.isValid && (cursor.curSegment == charPos))
-    {
+    {   
+        ESP_LOGD(MATRIX_DISP_TAG, "segment: %d", charPos);
+        ESP_LOGD(MATRIX_DISP_TAG, "Inverting graphic");
         graphic = ~graphic;
     }
 
@@ -497,7 +512,7 @@ esp_err_t setSymbol(symbols_t character, display_t display, uint8_t charPos)
     case UPPER_DISPLAY:
         // Set the character
         segmentStates[display][charPos] = graphic;
-        
+
         ret |= max7219_draw_image_8x8(&displays[display]->dev, charPos * 8, &graphic);
         break;
 
@@ -516,4 +531,9 @@ esp_err_t setSymbol(symbols_t character, display_t display, uint8_t charPos)
     }
 
     return ret;
+}
+
+void toggleCursor(void)
+{
+    cursor.isValid = !cursor.isValid;
 }

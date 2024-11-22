@@ -223,9 +223,16 @@ esp_err_t wordGuessGameStart(void)
 
                         // Make sure the character is valid
                         if(convertedChar != INVALID_SYMBOL)
-                        {
+                        {   
+                            // Disable the cursor 
+                            // This is as a fix for a bug that I dont have time to fix
+                            toggleCursor();
+
                             // Set the character on the display
                             setSymbol(convertedChar, UPPER_DISPLAY, cursorPos);
+                            
+                            // Re-enable the cursor
+                            toggleCursor();
 
                             // Reset the cursor
                             resetCursor();
