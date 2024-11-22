@@ -67,7 +67,8 @@ Gobals
 Statics
 ------------------------------------------------------------*/
 
-static char wordGuess[WORD_SIZE] = {'-'};
+static char wordToGuess[WORD_SIZE] = {'-'};
+static char guessedWord[WORD_SIZE] = {'-'};
 static wordGuessGameStates_t gameState = INIT;
 carousalSliderPos_t carousalSlider = {CAROUSEL_SLIDER_INIT_STRT, CAROUSEL_SLIDER_INIT_MID, CAROUSEL_SLIDER_INIT_END};
 
@@ -88,6 +89,19 @@ Local Function Prototypes
 esp_err_t cycleCarousal(direction_t direction);
 
 
+/*
+* Description:
+*      Calls the api and validates the guess
+*      If the guess is incorrect, the board will be updated
+* 
+* Arguments:
+*     None
+* 
+* Returns:
+*      True if the guess is correct
+*      False if the guess is incorrect
+*/
+bool validateGuess(void);
 
 /*-----------------------------------------------------------
 Functions
@@ -138,9 +152,13 @@ esp_err_t wordGuessGameReset(void)
     // Reset the board
     ret |= resetBoard();
 
-    // Reset the wordGuess 
-    memset(wordGuess, '-', sizeof(wordGuess));
-    wordGuess[WORD_SIZE - 1] = '\0';
+    // Reset the wordToGuess 
+    memset(wordToGuess, '-', sizeof(wordToGuess));
+    wordToGuess[WORD_SIZE - 1] = '\0';
+
+    // Reset the guessedWord
+    memset(guessedWord, '-', sizeof(guessedWord));
+    guessedWord[WORD_SIZE - 1] = '\0';
 
     // Reset the game state
     gameState = INIT;
@@ -173,7 +191,7 @@ esp_err_t wordGuessGameStart(void)
             break;
         case LETTER_SELECTION:
             gpio_set_level(SELECT_BTN_LED, 1);
-            gpio_set_level(GUESS_BTN_LED, 0);
+            gpio_set_level(GUESS_BTN_LED, 1);
             gpio_set_level(DELETE_BTN_LED, 0);
             gpio_set_level(EXIT_BTN_LED, 1);
             break;
@@ -216,9 +234,6 @@ esp_err_t wordGuessGameStart(void)
                     case LETTER_SELECTION:
                         // Get the selected character
                         seclectedChar = getCharAtCursor();
-
-                        // Set the selected character
-                        wordGuess[cursorPos] = seclectedChar;
                         
                         // Convert the character to a symbol
                         convertedChar = charToSymbol(seclectedChar);
@@ -279,12 +294,26 @@ esp_err_t wordGuessGameStart(void)
                         // Do nothing, no functionality for this button in this state
                         break;
                     case LETTER_SELECTION:
-                        // Do nothing, no functionality for this button in this state
-                        break;
                     case LETTER_EDIT:
-                        // TODO: Add guess call
-                        ESP_LOGI(LOG_TAG, "Guessing word: %s", wordGuess);
-                        gameState = RESULTS;
+                        getWord(guessedWord, sizeof(guessedWord));
+
+                        ESP_LOGI(LOG_TAG, "Word guessed is: %s", guessedWord);
+
+                        if(validateGuess())
+                        {
+                            ESP_LOGI(LOG_TAG, "Word guessed is correct");
+
+                            gameState = RESULTS;
+                        }
+                        else
+                        {
+                            ESP_LOGI(LOG_TAG, "Word guessed is incorrect");
+
+                            resetCursor();
+
+                            gameState = LETTER_EDIT;
+                        }
+
                         break;
                     case RESULTS:
                         // Do nothing, no functionality for this button in this state
@@ -311,9 +340,6 @@ esp_err_t wordGuessGameStart(void)
                     case LETTER_EDIT:
                         // Get cursor position
                         cursorPos = getCursorPos();
-
-                        // Set the character to a dash
-                        wordGuess[cursorPos] = '-';
 
                         // Convert the character to a symbol
                         convertedChar = charToSymbol('-');
@@ -579,3 +605,13 @@ esp_err_t wordGuessGameStart(void)
 
     return ESP_OK;
 }
+
+bool validateGuess(void)
+{
+    bool isCorrect = false;
+    char guessResults[WORD_SIZE];
+
+    // TODO: Add guess call
+
+    return isCorrect;
+ }
