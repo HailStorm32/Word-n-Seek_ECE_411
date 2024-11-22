@@ -30,6 +30,8 @@ Literal Constants
 #define CAROUSEL_SLIDER_INIT_MID   0
 #define CAROUSEL_SLIDER_INIT_END   1
 
+#define BTN_HOLD_DELAY_MS 200
+
 /*-----------------------------------------------------------
 Memory Constants
 ------------------------------------------------------------*/
@@ -379,22 +381,59 @@ esp_err_t wordGuessGameStart(void)
                         // Do nothing, no functionality for this button in this state
                         break;
                     case LETTER_SELECTION:
-                        // Get the cursor position
-                        cursorPos2 = getCursorPos();
-
-                        if(cursorPos2 == CAROUSEL_START_SEGMENT)
+                        // Accommodate long press
+                        if(gpio_get_level(GPIO_JOY_LEFT) == 0)
                         {
-                            // Move the carousal to the left
-                            cycleCarousal(LEFT);
+                            while(gpio_get_level(GPIO_JOY_LEFT) == 0)
+                            {
+                                cursorPos2 = getCursorPos();
+
+                                if(cursorPos2 == CAROUSEL_START_SEGMENT)
+                                {
+                                    // Move the carousal to the left
+                                    cycleCarousal(LEFT);
+                                }
+                                else
+                                {
+                                    // Move the cursor to the left
+                                    moveCursor(LEFT);
+                                }
+                                vTaskDelay(pdMS_TO_TICKS(BTN_HOLD_DELAY_MS));
+                            }
                         }
+                        // Accommodate single press
                         else
                         {
-                            // Move the cursor to the left
-                            moveCursor(LEFT);
+                            // Get the cursor position
+                            cursorPos2 = getCursorPos();
+
+                            if(cursorPos2 == CAROUSEL_START_SEGMENT)
+                            {
+                                // Move the carousal to the left
+                                cycleCarousal(LEFT);
+                            }
+                            else
+                            {
+                                // Move the cursor to the left
+                                moveCursor(LEFT);
+                            }
                         }
                         break;
                     case LETTER_EDIT:
-                        moveCursor(LEFT);
+                        // Accommodate long press
+                        if(gpio_get_level(GPIO_JOY_LEFT) == 0)
+                        {
+                            while(gpio_get_level(GPIO_JOY_LEFT) == 0)
+                            {
+                                moveCursor(LEFT);
+                                vTaskDelay(pdMS_TO_TICKS(BTN_HOLD_DELAY_MS));
+                            }
+                        }
+                        // Accommodate single press
+                        else
+                        {
+                            moveCursor(LEFT);
+                        }
                         break;
                     case RESULTS:
                         // Do nothing, no functionality for this button in this state
@@ -415,22 +454,59 @@ esp_err_t wordGuessGameStart(void)
                         // Do nothing, no functionality for this button in this state
                         break;
                     case LETTER_SELECTION:
-                        // Get the cursor position
-                        cursorPos2 = getCursorPos();
-
-                        if(cursorPos2 == CAROUSEL_END_SEGMENT)
+                        // Accommodate long press
+                        if(gpio_get_level(GPIO_JOY_RIGHT) == 0)
                         {
-                            // Move the carousal to the right
-                            cycleCarousal(RIGHT);
+                            while(gpio_get_level(GPIO_JOY_RIGHT) == 0)
+                            {
+                                cursorPos2 = getCursorPos();
+
+                                if(cursorPos2 == CAROUSEL_END_SEGMENT)
+                                {
+                                    // Move the carousal to the right
+                                    cycleCarousal(RIGHT);
+                                }
+                                else
+                                {
+                                    // Move the cursor to the right
+                                    moveCursor(RIGHT);
+                                }
+                                vTaskDelay(pdMS_TO_TICKS(BTN_HOLD_DELAY_MS));
+                            }
                         }
+                        // Accommodate single press
                         else
                         {
-                            // Move the cursor to the right
-                            moveCursor(RIGHT);
+                            // Get the cursor position
+                            cursorPos2 = getCursorPos();
+
+                            if(cursorPos2 == CAROUSEL_END_SEGMENT)
+                            {
+                                // Move the carousal to the right
+                                cycleCarousal(RIGHT);
+                            }
+                            else
+                            {
+                                // Move the cursor to the right
+                                moveCursor(RIGHT);
+                            }
                         }
                         break;
                     case LETTER_EDIT:
-                        moveCursor(RIGHT);
+                        // Accommodate long press
+                        if(gpio_get_level(GPIO_JOY_RIGHT) == 0)
+                        {
+                            while(gpio_get_level(GPIO_JOY_RIGHT) == 0)
+                            {
+                                moveCursor(RIGHT);
+                                vTaskDelay(pdMS_TO_TICKS(BTN_HOLD_DELAY_MS));
+                            }
+                        }
+                        // Accommodate single press
+                        else
+                        {
+                            moveCursor(RIGHT);
+                        }
                         break;
                     case RESULTS:
                         // Do nothing, no functionality for this button in this state
