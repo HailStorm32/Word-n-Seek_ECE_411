@@ -275,6 +275,10 @@ esp_err_t display_init(void)
 
 void enableCursor(void)
 {
+    if(cursor.isValid)
+    {
+        ESP_LOGW(LOG_TAG, "Cursor is already enabled");
+    }
     cursor.isValid = true;
 }
 
@@ -542,5 +546,9 @@ esp_err_t setSymbol(symbols_t symbol, display_t display, uint8_t charPos)
 
 void disableCursor(void)
 {
+    if(!cursor.isValid)
+    {
+        ESP_LOGW(LOG_TAG, "Cursor is already disabled");
+    }
     cursor.isValid = false;
 }
