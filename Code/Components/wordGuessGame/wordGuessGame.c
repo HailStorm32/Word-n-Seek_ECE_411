@@ -33,20 +33,6 @@ Literal Constants
 #define BTN_HOLD_DELAY_MS 200
 
 /*-----------------------------------------------------------
-Memory Constants
-------------------------------------------------------------*/
-
-const char carousalCharacters[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 
-                                   'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 
-                                   'U', 'V', 'W', 'X', 'Y', 'Z'};
-
-const symbols_t carousalScreenStartState[] = {LEFT_ARROW, Z, A, B, RIGHT_ARROW};
-static_assert(CASCADE_SIZE == (sizeof(carousalScreenStartState) / sizeof(symbols_t)), "Invalid carousal start state size");
-
-const symbols_t resultsScreenStartState[] = {UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN};
-static_assert(CASCADE_SIZE == (sizeof(resultsScreenStartState) / sizeof(symbols_t)), "Invalid results start state size");
-
-/*-----------------------------------------------------------
 Types
 ------------------------------------------------------------*/
 
@@ -201,7 +187,7 @@ esp_err_t displayCarousal(void)
 {
     esp_err_t ret = ESP_OK;
 
-    toggleCursor();
+    disableCursor();
 
     // Display the carousal
     for(uint8_t segment = 0; segment < CASCADE_SIZE; segment++)
@@ -209,7 +195,7 @@ esp_err_t displayCarousal(void)
         ret |= setSymbol(carousalScreenState[segment], LOWER_DISPLAY, segment);
     }
 
-    toggleCursor();
+    enableCursor();
 
     return ret;
 }
@@ -252,7 +238,9 @@ esp_err_t wordGuessGameReset(void)
     memcpy(resultScreenState, resultsScreenStartState, sizeof(resultScreenState));
 
     // Reset the board
+    disableCursor();
     ret |= resetBoard();
+    enableCursor();
 
     // Reset the wordToGuess 
     memset(wordToGuess, '-', sizeof(wordToGuess));
@@ -345,13 +333,13 @@ esp_err_t wordGuessGameStart(void)
                         {   
                             // Disable the cursor 
                             // This is as a fix for a bug that I dont have time to fix
-                            toggleCursor();
+                            disableCursor();
 
                             // Set the character on the display
                             setSymbol(convertedChar, UPPER_DISPLAY, cursorPos);
                             
                             // Re-enable the cursor
-                            toggleCursor();
+                            enableCursor();
 
                             // Save the carousal state
                             saveCarousalState();
@@ -386,7 +374,7 @@ esp_err_t wordGuessGameStart(void)
                         moveCursor(DOWN);
                         break;
                     case RESULTS:
-                        /* code */
+                        gameState = INIT;
                         break;
                     default:
                         ESP_LOGE(LOG_TAG, "Given invalid game state");
@@ -419,10 +407,16 @@ esp_err_t wordGuessGameStart(void)
                         {
                             ESP_LOGI(LOG_TAG, "Word guessed is incorrect");
 
-                            resetCursor();
-
                             gameState = LETTER_EDIT;
                         }
+
+                        disableCursor();
+
+                        displayResults();
+
+                        enableCursor();
+
+                        resetCursor();
 
                         break;
                     case RESULTS:
@@ -484,6 +478,7 @@ esp_err_t wordGuessGameStart(void)
                         isRunning = false;
                         break;
                     case LETTER_SELECTION:
+                        //TODO: Have it exit letter selection and go back to letter edit
                         isRunning = false;
                         break;
                     case LETTER_EDIT:
@@ -718,13 +713,32 @@ esp_err_t wordGuessGameStart(void)
 
 bool validateGuess(void)
 {
-    bool isCorrect = false;
+    bool isCorrect = true;
     char guessResults[WORD_SIZE];
-
-    // TODO: Add guess call
-
-    //TODO: create map to go from api result to symbol
     
+    // TODO: Add guess call
+    // memcpy(guessResults, "++--x", WORD_SIZE);
+    memcpy(guessResults, "+++++", WORD_SIZE);
+
+    // Set the results
+    for(uint8_t segment = 0; segment < CASCADE_SIZE; segment++)
+    {   
+        // Get the equivalent symbol for the character
+        for(uint8_t character = 0; character < WORD_SIZE; character++)
+        {
+            if(guessResults[segment] == apiCharMap[character].apiChar)
+            {
+                resultScreenState[segment] = apiCharMap[character].equivalentSymbol;
+                break;
+            }
+        }
+
+        // Flip the is correct flag if at least one character is incorrect
+        if( isCorrect && resultScreenState[segment] != CORRECT)
+        {
+            isCorrect = false;
+        }
+    }
 
     return isCorrect;
  }
