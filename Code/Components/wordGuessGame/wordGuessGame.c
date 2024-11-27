@@ -65,6 +65,32 @@ typedef struct
     uint8_t end;
 }carousalSliderPos_t;
 
+typedef struct 
+{
+    char apiChar;
+    symbols_t equivalentSymbol;
+} apiCharMap_t;
+
+/*-----------------------------------------------------------
+Memory Constants
+------------------------------------------------------------*/
+
+const char carousalCharacters[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 
+                                   'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 
+                                   'U', 'V', 'W', 'X', 'Y', 'Z'};
+
+const symbols_t carousalScreenStartState[] = {LEFT_ARROW, Z, A, B, RIGHT_ARROW};
+static_assert(CASCADE_SIZE == (sizeof(carousalScreenStartState) / sizeof(symbols_t)), "Invalid carousal start state size");
+
+const symbols_t resultsScreenStartState[] = {UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN};
+static_assert(CASCADE_SIZE == (sizeof(resultsScreenStartState) / sizeof(symbols_t)), "Invalid results start state size");
+
+const apiCharMap_t apiCharMap[] = {
+    {'+', CORRECT},
+    {'x', SWAPP_ARROWS},
+    {'-', INCORRECT}
+};
+
 /*-----------------------------------------------------------
 Gobals
 ------------------------------------------------------------*/

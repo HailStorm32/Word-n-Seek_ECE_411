@@ -54,7 +54,8 @@ const graphicSymbolMap_t graphicSymbolMap[] = {
     {0x000c000c1830331e, '?'},
     {0x040e1f3360c08000, '/'},  // checkmark
     {0x061e7efe7e1e0600, '>'},  // right arrow 
-    {0x60787e7f7e786000, '<'}   // left arrow
+    {0x60787e7f7e786000, '<'},  // left arrow
+    {0x40f8f8581a1f1f02, '&'}   // "uno reverse" symbol
 };
 static_assert(TOTAL_NUM_OF_SYMBOLS == (sizeof(graphicSymbolMap) / sizeof(graphicSymbolMap_t)), "TOTAL_NUM_OF_SYMBOLS does not match the number of elements in graphicSymbolMap");
 

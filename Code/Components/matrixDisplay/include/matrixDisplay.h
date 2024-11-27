@@ -58,6 +58,7 @@ typedef enum
     CORRECT,
     RIGHT_ARROW,
     LEFT_ARROW,
+    SWAPP_ARROWS,
     SPECIAL_SYMBOLS_END,
     
     SPECIAL_SYMBOLS_COUNT = SPECIAL_SYMBOLS_END - SPECIAL_SYMBOLS_START + 1,
@@ -106,6 +107,19 @@ symbols_t charToSymbol(char character);
 *      esp_err_t: ESP_OK if the display was initialized successfully
 */
 esp_err_t display_init(void);
+
+
+/*
+* Description:
+*     Enables the cursor 
+* 
+* Arguments:
+*     None
+* 
+* Returns:
+*      None
+*/
+void enableCursor(void);
 
 
 /*
@@ -191,7 +205,7 @@ esp_err_t resetBoard(void);
 
 /*
 * Description:
-*      Resets the cursor to the starting position (bottom middle)
+*      Resets the cursor to the starting position (top middle)
 * 
 * Arguments:
 *     None
@@ -217,7 +231,7 @@ esp_err_t setSymbol(symbols_t symbol, display_t display, uint8_t charPos);
 
 /*
 * Description:
-*      Toggle the cursor on and off
+*      Toggle the cursor off
 * 
 * Arguments:
 *     None
@@ -225,4 +239,4 @@ esp_err_t setSymbol(symbols_t symbol, display_t display, uint8_t charPos);
 * Returns:
 *     None
 */
-void toggleCursor(void);
+void disableCursor(void);

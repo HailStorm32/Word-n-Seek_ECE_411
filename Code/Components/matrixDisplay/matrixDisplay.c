@@ -273,6 +273,11 @@ esp_err_t display_init(void)
     return ESP_OK;
 }
 
+void enableCursor(void)
+{
+    cursor.isValid = true;
+}
+
 char getCharAtCursor(void)
 {
     return graphicToChar(segmentStates[cursor.curDisplay][cursor.curSegment]);
@@ -431,7 +436,7 @@ esp_err_t moveCursorMultiple(direction_t direction, uint8_t numMoves)
     esp_err_t ret = ESP_OK;
 
     // Disable the cursor to prevent flickering
-    toggleCursor();
+    disableCursor();
 
     for(uint8_t move = 0; move < numMoves; move++)
     {
@@ -439,7 +444,7 @@ esp_err_t moveCursorMultiple(direction_t direction, uint8_t numMoves)
     }
 
     // Enable the cursor
-    toggleCursor();
+    enableCursor();
 
     return ret;
 }
@@ -535,7 +540,7 @@ esp_err_t setSymbol(symbols_t symbol, display_t display, uint8_t charPos)
     return ret;
 }
 
-void toggleCursor(void)
+void disableCursor(void)
 {
-    cursor.isValid = !cursor.isValid;
+    cursor.isValid = false;
 }
