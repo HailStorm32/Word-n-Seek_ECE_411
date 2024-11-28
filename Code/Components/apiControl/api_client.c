@@ -108,20 +108,28 @@ char* api_get_word() {
     
     char* word = malloc(WORD_SIZE);
 
-    ESP_LOGI(TAG, "Sending POST request to URL: %s", GET_WORD_URL);
+    ESP_LOGI(TAG, "Sending GET request to URL: %s", GET_WORD_URL);
     
 
     esp_http_client_set_url(client, GET_WORD_URL);
-    esp_http_client_set_method(client, HTTP_METHOD_GET);
+    esp_http_client_set_method(client, HTTP_METHOD_POST);
     
     // Set the POST data
     //esp_http_client_set_post_field(client, post_data, strlen(post_data));
 
-    // Perform the POST request
+    // Perform the GET request
     esp_err_t err = esp_http_client_perform(client);
     if (err == ESP_OK) {
         int status_code = esp_http_client_get_status_code(client);
-        ESP_LOGI(TAG, "HTTP POST Status = %d, content_length = %d", status_code, (int)esp_http_client_get_content_length(client));
+        ESP_LOGI(TAG, "HTTP GET Status = %d, content_length = %d", status_code, (int)esp_http_client_get_content_length(client));
+
+        char buffer[1024]; // Adjust buffer size based on your response size
+        int data_read;
+        ESP_LOGI(TAG, "Reading response in chunks...");
+    while ((data_read = esp_http_client_read(client, buffer, sizeof(buffer) - 1)) > 0) {
+        buffer[data_read] = '\0'; // Null-terminate the buffer for logging
+        ESP_LOGI(TAG, "Chunk read: %s", buffer);
+}
 
         // Parse the JSON response
         /*cJSON *json = cJSON_Parse(response.buffer);
@@ -159,7 +167,7 @@ char* api_get_word() {
         return word;
 
     } else {
-        ESP_LOGE(TAG, "HTTP POST request failed: %s", esp_err_to_name(err));
+        ESP_LOGE(TAG, "HTTP GET request failed: %s", esp_err_to_name(err));
         free(word);
         return NULL;
     }
@@ -205,9 +213,10 @@ esp_err_t api_client_init(void){
     config.cert_pem = root_cert;
     config.transport_type = HTTP_TRANSPORT_OVER_SSL;
     config.skip_cert_common_name_check = true;
+    config.buffer_size = BUFFER_SIZE;
     // .method = HTTP_METHOD_POST,
-    config.event_handler = _http_event_handler;
-    config.user_data = &response; // Pass response buffer to event handler
+    //config.event_handler = _http_event_handler;
+    //config.user_data = &response; // Pass response buffer to event handler
     
 
     client = esp_http_client_init(&config);
