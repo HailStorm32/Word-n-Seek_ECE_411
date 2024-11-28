@@ -1,6 +1,7 @@
 #include "esp_log.h"
 #include <gpioControl.h>
 #include <wifi.h>
+#include "api_client.h"
 #include <matrixDisplay.h>
 
 #define LOG_TAG  "main"
@@ -9,11 +10,25 @@ int app_main(void)
 {
     uint32_t ioNum;
     char word[6] = {0};
-
+    char* word2;
     initGPIO();
     ESP_LOGI(LOG_TAG, "ESP32 WiFi Station");
     wifi_init_sta();
+    api_client_init();
     display_init();
+    
+    //Fetching word of the day from API
+    
+    ESP_LOGI(LOG_TAG, "Fetching word from API");
+    word2 = api_get_word();
+
+    if (word2) {
+        ESP_LOGI(LOG_TAG, "Word retrieved: %s", word2);
+        // Display the word
+    } else {
+        ESP_LOGE(LOG_TAG, "Failed to get word from API");
+    }
+    
 
     ESP_LOGI(LOG_TAG, "Boot successful");
 
