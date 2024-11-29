@@ -49,6 +49,14 @@ typedef struct {
     int data_length;
 } response_data_t;
 
+typedef enum {
+    HTTP_SUCCESS = 0,
+    HTTP_ERROR_OPEN_CONNECTION,
+    HTTP_ERROR_WRITE_FAILED,
+    HTTP_ERROR_FETCH_HEADERS_FAILED,
+    HTTP_ERROR_READ_RESPONSE_FAILED
+} http_error_t;
+
 static const char *TAG = "api_client";
 static esp_http_client_handle_t client;
 static esp_http_client_config_t config;
@@ -104,96 +112,96 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt) {
     return ESP_OK;
 }
 
+
+
 char* api_get_word() {
-    
     char* word = malloc(WORD_SIZE);
+    if (word == NULL) {
+        ESP_LOGE(TAG, "Failed to allocate memory for word");
+        return NULL;
+    }
 
     ESP_LOGI(TAG, "Sending GET request to URL: %s", GET_WORD_URL);
-    
+
+    const char *post_data = "{\"timezone\":\"UTC + 8\"}";
+    char output_buffer[BUFFER_SIZE] = {0};   // Buffer to store response of http request
+    int content_length = 0;
+    esp_err_t err = ESP_OK;
+    http_error_t error_code = HTTP_SUCCESS;
 
     esp_http_client_set_url(client, GET_WORD_URL);
     esp_http_client_set_method(client, HTTP_METHOD_POST);
-    
-    // Set the POST data
-    //esp_http_client_set_post_field(client, post_data, strlen(post_data));
+    esp_http_client_set_header(client, "Content-Type", "application/json");
+    err = esp_http_client_open(client, strlen(post_data));
 
-    // Perform the GET request
-    esp_err_t err = esp_http_client_perform(client);
-    if (err == ESP_OK) {
-        int status_code = esp_http_client_get_status_code(client);
-        ESP_LOGI(TAG, "HTTP GET Status = %d, content_length = %d", status_code, (int)esp_http_client_get_content_length(client));
-
-        char buffer[1024]; // Adjust buffer size based on your response size
-        int data_read;
-        ESP_LOGI(TAG, "Reading response in chunks...");
-    while ((data_read = esp_http_client_read(client, buffer, sizeof(buffer) - 1)) > 0) {
-        buffer[data_read] = '\0'; // Null-terminate the buffer for logging
-        ESP_LOGI(TAG, "Chunk read: %s", buffer);
-}
-
-        // Parse the JSON response
-        /*cJSON *json = cJSON_Parse(response.buffer);
-        if (json == NULL) {
-            ESP_LOGE(TAG, "Failed to parse JSON response");
-            free(response.buffer);
-            esp_http_client_cleanup(client);
-            return NULL;
-        }
-
-        // Get the "word" value
-        cJSON *word_item = cJSON_GetObjectItem(json, "word");
-        if (word_item == NULL || !cJSON_IsString(word_item)) {
-            ESP_LOGE(TAG, "Failed to get 'word' from JSON response");
-            cJSON_Delete(json);
-            free(response.buffer);
-            esp_http_client_cleanup(client);
-            return NULL;
-        }
-
-        // Copy the word
-        char *word = strdup(word_item->valuestring);
-        if (word == NULL) {
-            ESP_LOGE(TAG, "Failed to allocate memory for word");
+    if (err != ESP_OK) {
+        error_code = HTTP_ERROR_OPEN_CONNECTION;
+    } else {
+        int wlen = esp_http_client_write(client, post_data, strlen(post_data));
+        if (wlen < 0) {
+            error_code = HTTP_ERROR_WRITE_FAILED;
         } else {
-            // Print the word to the console
-            ESP_LOGI(TAG, "Retrieved word: %s", word);
-        } */
-
-        // Clean up
-        //cJSON_Delete(json);
-        
-        memcpy(word, "word\0", WORD_SIZE);
-
-        return word;
-
-    } else {
-        ESP_LOGE(TAG, "HTTP GET request failed: %s", esp_err_to_name(err));
-        free(word);
-        return NULL;
-    }
-}
-
-// Main function to demonstrate usage
-/*void app_main(void) {
-    // Replace with your actual URL and POST data
-    const char *url = "https://wordle-game-api1.p.rapidapi.com/your-endpoint";
-    const char *post_data = "{\"param1\":\"value1\",\"param2\":\"value2\"}";
-
-    
-
-    // Retrieve the word
-    char *word = api_get_word_post(url, post_data);
-    if (word != NULL) {
-        // Free the allocated memory
-        free(word);
-    } else {
-        ESP_LOGE(TAG, "Failed to retrieve word");
+            content_length = esp_http_client_fetch_headers(client);
+            if (content_length < 0) {
+                error_code = HTTP_ERROR_FETCH_HEADERS_FAILED;
+            } else {
+                int data_read = esp_http_client_read_response(client, output_buffer, BUFFER_SIZE);
+                if (data_read >= 0) {
+                    error_code = HTTP_SUCCESS;
+                } else {
+                    error_code = HTTP_ERROR_READ_RESPONSE_FAILED;
+                }
+            }
+        }
     }
 
-    // For testing purposes only! (Optionally, can delete the task or enter a loop)
-    // vTaskDelete(NULL);
+    switch (error_code) {
+        case HTTP_SUCCESS:
+            ESP_LOGI(TAG, "HTTP POST Status = %d, content_length = %lld",
+                esp_http_client_get_status_code(client),
+                esp_http_client_get_content_length(client));
+            ESP_LOG_BUFFER_HEXDUMP(TAG, output_buffer, strlen(output_buffer), ESP_LOG_INFO);
+            // Process the response to extract the word
+            // Replace this placeholder with actual parsing logic
+            memcpy(word, "word", WORD_SIZE);
+            break;
+
+        case HTTP_ERROR_OPEN_CONNECTION:
+            ESP_LOGE(TAG, "Failed to open HTTP connection: %s", esp_err_to_name(err));
+            free(word);
+            word = NULL;
+            break;
+
+        case HTTP_ERROR_WRITE_FAILED:
+            ESP_LOGE(TAG, "Write failed");
+            free(word);
+            word = NULL;
+            break;
+
+        case HTTP_ERROR_FETCH_HEADERS_FAILED:
+            ESP_LOGE(TAG, "HTTP client fetch headers failed");
+            free(word);
+            word = NULL;
+            break;
+
+        case HTTP_ERROR_READ_RESPONSE_FAILED:
+            ESP_LOGE(TAG, "Failed to read response");
+            free(word);
+            word = NULL;
+            break;
+
+        default:
+            ESP_LOGE(TAG, "An unknown error occurred");
+            free(word);
+            word = NULL;
+            break;
+    }
+
+    esp_http_client_cleanup(client);
+    return word;
 }
-*/
+
+
 
 esp_err_t api_client_init(void){
     
@@ -211,8 +219,8 @@ esp_err_t api_client_init(void){
     // Configure the HTTP client
     config.url = "https://wordle-game-api1.p.rapidapi.com";
     config.cert_pem = root_cert;
-    config.transport_type = HTTP_TRANSPORT_OVER_SSL;
-    config.skip_cert_common_name_check = true;
+    //config.transport_type = HTTP_TRANSPORT_OVER_SSL;
+    //config.skip_cert_common_name_check = true;
     config.buffer_size = BUFFER_SIZE;
     // .method = HTTP_METHOD_POST,
     //config.event_handler = _http_event_handler;
@@ -233,3 +241,5 @@ esp_err_t api_client_init(void){
     return ESP_OK;
 
 }
+
+
