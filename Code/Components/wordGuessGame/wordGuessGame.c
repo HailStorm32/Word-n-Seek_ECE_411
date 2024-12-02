@@ -34,6 +34,9 @@ Literal Constants
 
 #define MAX_GUESSES 6
 
+#define MAX_BRIGHTNESS 15
+#define DEFAULT_BRIGHTNESS 2 // 0 - 15
+
 /*-----------------------------------------------------------
 Types
 ------------------------------------------------------------*/
@@ -102,6 +105,7 @@ Statics
 ------------------------------------------------------------*/
 
 static uint16_t guessCount;
+static uint8_t screenBrightness = DEFAULT_BRIGHTNESS;
 static char wordToGuess[WORD_SIZE] = {'-'};
 static char guessedWord[WORD_SIZE] = {'-'};
 static symbols_t carousalScreenState[CASCADE_SIZE];
@@ -258,6 +262,10 @@ esp_err_t wordGuessGameReset(void)
     disableCursor();
     ret |= resetBoard();
     enableCursor();
+
+    // Reset brightness
+    screenBrightness = DEFAULT_BRIGHTNESS;
+    setBrightness(screenBrightness);
 
     // Reset the wordToGuess 
     memset(wordToGuess, '-', sizeof(wordToGuess));
@@ -709,16 +717,16 @@ esp_err_t wordGuessGameStart(void)
                     switch(gameState)
                     {
                     case INIT:
-                        // Do nothing, no functionality for this button in this state
-                        break;
                     case LETTER_SELECTION:
-                        // Do nothing, no functionality for this button in this state
-                        break;
                     case LETTER_EDIT:
-                        /* code */
-                        break;
                     case RESULTS:
-                        // Do nothing, no functionality for this button in this state
+                        if(++screenBrightness > MAX_BRIGHTNESS)
+                        {
+                            screenBrightness = MAX_BRIGHTNESS;
+                        }
+
+                        setBrightness(screenBrightness);
+                        ESP_LOGI(LOG_TAG, "Brightness: %d", screenBrightness);
                         break;
                     default:
                         ESP_LOGE(LOG_TAG, "Given invalid game state");
@@ -733,16 +741,16 @@ esp_err_t wordGuessGameStart(void)
                     switch(gameState)
                     {
                     case INIT:
-                        // Do nothing, no functionality for this button in this state
-                        break;
                     case LETTER_SELECTION:
-                        // Do nothing, no functionality for this button in this state
-                        break;
                     case LETTER_EDIT:
-                        /* code */
-                        break;
                     case RESULTS:
-                        // Do nothing, no functionality for this button in this state
+                        if(--screenBrightness > MAX_BRIGHTNESS)
+                        {
+                            screenBrightness = 0;
+                        }
+
+                        setBrightness(screenBrightness);
+                        ESP_LOGI(LOG_TAG, "Brightness: %d", screenBrightness);
                         break;
                     default:
                         ESP_LOGE(LOG_TAG, "Given invalid game state");

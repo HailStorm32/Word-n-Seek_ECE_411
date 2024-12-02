@@ -526,6 +526,18 @@ esp_err_t setSymbol(symbols_t symbol, display_t display, uint8_t charPos)
     return ret;
 }
 
+void setBrightness(uint8_t brightness)
+{
+    if(brightness > MAX7219_MAX_BRIGHTNESS)
+    {
+        ESP_LOGE(LOG_TAG, "Invalid brightness: %d", brightness);
+        return;
+    }
+
+    ESP_ERROR_CHECK(max7219_set_brightness(&displays[LOWER_DISPLAY]->dev, brightness));
+    ESP_ERROR_CHECK(max7219_set_brightness(&displays[UPPER_DISPLAY]->dev, brightness));
+}
+
 void disableCursor(void)
 {
     if(!cursor.isValid)

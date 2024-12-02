@@ -236,6 +236,18 @@ esp_err_t resetCursor(void);
 
 /*
 * Description:
+*      Sets the brightness of the display
+* 
+* Arguments:
+*     uint8_t brightness: The brightness to set the display
+* 
+* Returns:
+*      None
+*/
+void setBrightness(uint8_t brightness);
+
+/*
+* Description:
 *      sets the segment to the symbol
 * 
 * Arguments:
