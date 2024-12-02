@@ -77,24 +77,6 @@ Local Function Prototypes
 */
 void correctCursorPos(void);
 
-/*
-* Description:
-*   Displays a graphic accross all displays
-*     
-*   NOTE:
-*      Must contain enough frames to fill all segments
-*      Graphic is displayed starting from the far left 
-*      of the top display and moves to the right
-*
-* Arguments:
-*      uint64_t *graphic: Pointer to graphic array
-*      int size: Size of the graphic array
-*
-* Returns:
-*      esp_err_t: ESP_OK if the graphic was displayed successfully
-*/
-esp_err_t displayFullGraphic(const uint64_t *graphic, const int size);
-
 
 /*
 * Description:

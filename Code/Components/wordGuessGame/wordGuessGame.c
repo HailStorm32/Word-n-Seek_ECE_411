@@ -79,6 +79,20 @@ const apiCharMap_t apiCharMap[] = {
     {'-', INCORRECT}
 };
 
+// GOOD \n BYE 
+const uint64_t exitScreen[] = {
+    0x3c66760606663c00,
+    0x3c66666666663c00,
+    0x3c66666666663c00,
+    0x3e66666666663e00,
+    0x0000000000000000,
+    0x0000000000000000,
+    0x3e66663e66663e00,
+    0x1818183c66666600,
+    0x7e06063e06067e00,
+    0x0000000000000000
+};
+
 /*-----------------------------------------------------------
 Gobals
 ------------------------------------------------------------*/
@@ -302,7 +316,7 @@ esp_err_t wordGuessGameStart(void)
             gpio_set_level(EXIT_BTN_LED, 1);
             break;
         case RESULTS:
-            gpio_set_level(SELECT_BTN_LED, 1);
+            gpio_set_level(SELECT_BTN_LED, 0);
             gpio_set_level(GUESS_BTN_LED, 0);
             gpio_set_level(DELETE_BTN_LED, 0);
             gpio_set_level(EXIT_BTN_LED, 1);
@@ -383,7 +397,7 @@ esp_err_t wordGuessGameStart(void)
                         moveCursor(DOWN);
                         break;
                     case RESULTS:
-                        gameState = INIT;
+                        // Do nothing, no functionality for this button in this state
                         break;
                     default:
                         ESP_LOGE(LOG_TAG, "Given invalid game state");
@@ -433,7 +447,7 @@ esp_err_t wordGuessGameStart(void)
                             }
                             else
                             {
-                                ESP_LOGI(LOG_TAG, "Guess count is: %d", guessCount);
+                                ESP_LOGI(LOG_TAG, "Guesses left: %d", MAX_GUESSES - guessCount);
 
                                 gameState = LETTER_EDIT;
                             }
@@ -503,17 +517,28 @@ esp_err_t wordGuessGameStart(void)
                 case EXIT_BTN:
                     switch(gameState)
                     {
-                    case INIT:
-                        isRunning = false;
-                        break;
                     case LETTER_SELECTION:
-                        //TODO: Have it exit letter selection and go back to letter edit
-                        isRunning = false;
+                        // Save the carousal state
+                        saveCarousalState();
+
+                        // Display the result screen
+                        displayResults();
+
+                        // Reset the cursor
+                        resetCursor();
+
+                        gameState = LETTER_EDIT;
                         break;
+                    case INIT:
                     case LETTER_EDIT:
-                        isRunning = false;
-                        break;
                     case RESULTS:
+                        displayFullGraphic(exitScreen, sizeof(exitScreen));
+
+                        gpio_set_level(SELECT_BTN_LED, 0);
+                        gpio_set_level(GUESS_BTN_LED, 0);
+                        gpio_set_level(DELETE_BTN_LED, 0);
+                        gpio_set_level(EXIT_BTN_LED, 0);
+
                         isRunning = false;
                         break;
                     default:
@@ -746,8 +771,8 @@ bool validateGuess(void)
     char guessResults[WORD_SIZE];
     
     // TODO: Add guess call
-    memcpy(guessResults, "++--x", WORD_SIZE);
-    //memcpy(guessResults, "+++++", WORD_SIZE);
+    // memcpy(guessResults, "++--x", WORD_SIZE);
+    memcpy(guessResults, "+++++", WORD_SIZE);
 
     // Set the results
     for(uint8_t segment = 0; segment < CASCADE_SIZE; segment++)
