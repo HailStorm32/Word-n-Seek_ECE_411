@@ -32,6 +32,8 @@ Literal Constants
 
 #define BTN_HOLD_DELAY_MS 200
 
+#define MAX_GUESSES 6
+
 /*-----------------------------------------------------------
 Types
 ------------------------------------------------------------*/
@@ -85,6 +87,7 @@ Gobals
 Statics
 ------------------------------------------------------------*/
 
+static uint16_t guessCount;
 static char wordToGuess[WORD_SIZE] = {'-'};
 static char guessedWord[WORD_SIZE] = {'-'};
 static symbols_t carousalScreenState[CASCADE_SIZE];
@@ -246,9 +249,16 @@ esp_err_t wordGuessGameReset(void)
     memset(wordToGuess, '-', sizeof(wordToGuess));
     wordToGuess[WORD_SIZE - 1] = '\0';
 
+    // Retreive the word to guess
+    //TODO: Add word retreival call
+    memcpy(wordToGuess, "HELLO", WORD_SIZE);
+
     // Reset the guessedWord
     memset(guessedWord, '-', sizeof(guessedWord));
     guessedWord[WORD_SIZE - 1] = '\0';
+
+    // Reset the guess count
+    guessCount = 0;
 
     // Reset the game state
     gameState = INIT;
@@ -301,7 +311,6 @@ esp_err_t wordGuessGameStart(void)
             ESP_LOGE(LOG_TAG, "Given invalid game state");
             break;
         }
-
 
         if(xQueueReceive(gpioEventQueue, &ioNum, portMAX_DELAY)) 
         {
@@ -407,7 +416,27 @@ esp_err_t wordGuessGameStart(void)
                         {
                             ESP_LOGI(LOG_TAG, "Word guessed is incorrect");
 
-                            gameState = LETTER_EDIT;
+                            ++guessCount;
+
+                            if(guessCount >= MAX_GUESSES)
+                            {
+                                // Set the results screen to the word to guess
+                                for(uint8_t segment = 0; segment < CASCADE_SIZE; segment++)
+                                {
+                                    resultScreenState[segment] = charToSymbol(wordToGuess[segment]);
+                                }
+
+                                // Update the results screen
+                                displayResults();
+
+                                gameState = RESULTS;
+                            }
+                            else
+                            {
+                                ESP_LOGI(LOG_TAG, "Guess count is: %d", guessCount);
+
+                                gameState = LETTER_EDIT;
+                            }
                         }
 
                         disableCursor();
@@ -717,8 +746,8 @@ bool validateGuess(void)
     char guessResults[WORD_SIZE];
     
     // TODO: Add guess call
-    // memcpy(guessResults, "++--x", WORD_SIZE);
-    memcpy(guessResults, "+++++", WORD_SIZE);
+    memcpy(guessResults, "++--x", WORD_SIZE);
+    //memcpy(guessResults, "+++++", WORD_SIZE);
 
     // Set the results
     for(uint8_t segment = 0; segment < CASCADE_SIZE; segment++)
