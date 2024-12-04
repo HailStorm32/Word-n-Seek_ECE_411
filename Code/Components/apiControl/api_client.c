@@ -38,10 +38,10 @@ const char *root_cert =
     "akcjMS9cmvqtmg5iUaQqqcT5NJ0hGA==\n"
     "-----END CERTIFICATE-----";
 
-
 #define WORD_SIZE 6
 #define BUFFER_SIZE 1024
 #define GET_WORD_URL "https://wordle-game-api1.p.rapidapi.com/word"
+#define CHECK_WORD_URL "https://wordle-game-api1.p.rapidapi.com/check"
 
 typedef struct {
     char *buffer;
@@ -62,74 +62,20 @@ static esp_http_client_handle_t client;
 static esp_http_client_config_t config;
 static response_data_t response;
 
-
-
-// Event handler for HTTP events
-esp_err_t _http_event_handler(esp_http_client_event_t *evt) {
-    response_data_t *eventResponse = (response_data_t *)evt->user_data;
-    switch(evt->event_id) {
-        case HTTP_EVENT_ERROR:
-            ESP_LOGE(TAG, "HTTP_EVENT_ERROR");
-            break;
-        case HTTP_EVENT_ON_CONNECTED:
-            ESP_LOGI(TAG, "HTTP_EVENT_ON_CONNECTED");
-            break;
-        case HTTP_EVENT_HEADER_SENT:
-            ESP_LOGI(TAG, "HTTP_EVENT_HEADER_SENT");
-            break;
-        case HTTP_EVENT_ON_HEADER:
-            ESP_LOGI(TAG, "HTTP_EVENT_ON_HEADER");
-            break;
-        case HTTP_EVENT_ON_DATA:
-            if (evt->data_len > 0) {
-                // Ensure there's enough space in the buffer
-                if (eventResponse->data_length + evt->data_len >= eventResponse->buffer_size) {
-                    // Expand the buffer
-                    int new_size = eventResponse->buffer_size + evt->data_len + 1; // +1 for null terminator
-                    char *new_buffer = realloc(eventResponse->buffer, new_size);
-                    if (new_buffer == NULL) {
-                        ESP_LOGE(TAG, "Failed to allocate memory for response buffer");
-                        return ESP_FAIL;
-                    }
-                    eventResponse->buffer = new_buffer;
-                    eventResponse->buffer_size = new_size;
-                }
-                // Copy the data into the buffer
-                memcpy(eventResponse->buffer + eventResponse->data_length, evt->data, evt->data_len);
-                eventResponse->data_length += evt->data_len;
-                eventResponse->buffer[eventResponse->data_length] = '\0'; // Null-terminate the buffer
-            }
-            break;
-        case HTTP_EVENT_ON_FINISH:
-            ESP_LOGI(TAG, "HTTP_EVENT_ON_FINISH");
-            break;
-        case HTTP_EVENT_DISCONNECTED:
-            ESP_LOGI(TAG, "HTTP_EVENT_DISCONNECTED");
-            break;
-        default:
-            break;
-    }
-    return ESP_OK;
-}
-
-
-
-char* api_get_word() {
-    char* word = malloc(WORD_SIZE);
-    if (word == NULL) {
-        ESP_LOGE(TAG, "Failed to allocate memory for word");
-        return NULL;
-    }
-
-    ESP_LOGI(TAG, "Sending GET request to URL: %s", GET_WORD_URL);
-
-    const char *post_data = "{\"timezone\":\"UTC + 8\"}";
-    char output_buffer[BUFFER_SIZE] = {0};   // Buffer to store response of http request
-    int content_length = 0;
+/**
+ * @brief Makes an HTTP POST request to the specified URL with the given post data.
+ *
+ * @param url The URL to send the POST request to.
+ * @param post_data The data to include in the POST request body.
+ * @param output_buffer Buffer to store the response.
+ * @param buffer_size Size of the output_buffer.
+ * @return http_error_t Returns an error code indicating the success or failure of the request.
+ */
+static http_error_t make_post_request(const char *url, const char *post_data, char *output_buffer, int buffer_size) {
     esp_err_t err = ESP_OK;
     http_error_t error_code = HTTP_SUCCESS;
 
-    esp_http_client_set_url(client, GET_WORD_URL);
+    esp_http_client_set_url(client, url);
     esp_http_client_set_method(client, HTTP_METHOD_POST);
     esp_http_client_set_header(client, "Content-Type", "application/json");
     err = esp_http_client_open(client, strlen(post_data));
@@ -141,11 +87,11 @@ char* api_get_word() {
         if (wlen < 0) {
             error_code = HTTP_ERROR_WRITE_FAILED;
         } else {
-            content_length = esp_http_client_fetch_headers(client);
+            int content_length = esp_http_client_fetch_headers(client);
             if (content_length < 0) {
                 error_code = HTTP_ERROR_FETCH_HEADERS_FAILED;
             } else {
-                int data_read = esp_http_client_read_response(client, output_buffer, BUFFER_SIZE);
+                int data_read = esp_http_client_read_response(client, output_buffer, buffer_size);
                 if (data_read >= 0) {
                     error_code = HTTP_SUCCESS;
                 } else {
@@ -154,6 +100,21 @@ char* api_get_word() {
             }
         }
     }
+    return error_code;
+}
+
+char* api_get_word() {
+    char* word = malloc(WORD_SIZE);
+    if (word == NULL) {
+        ESP_LOGE(TAG, "Failed to allocate memory for word");
+        return NULL;
+    }
+
+    ESP_LOGI(TAG, "Sending POST request to URL: %s", GET_WORD_URL);
+
+    const char *post_data = "{\"timezone\":\"UTC + 8\"}";
+    char output_buffer[BUFFER_SIZE] = {0};   // Buffer to store response of HTTP request
+    http_error_t error_code = make_post_request(GET_WORD_URL, post_data, output_buffer, BUFFER_SIZE);
 
     switch (error_code) {
         case HTTP_SUCCESS:
@@ -167,7 +128,7 @@ char* api_get_word() {
             break;
 
         case HTTP_ERROR_OPEN_CONNECTION:
-            ESP_LOGE(TAG, "Failed to open HTTP connection: %s", esp_err_to_name(err));
+            ESP_LOGE(TAG, "Failed to open HTTP connection");
             free(word);
             word = NULL;
             break;
@@ -201,11 +162,61 @@ char* api_get_word() {
     return word;
 }
 
+char* api_check_word(const char* guess) {
+    if (guess == NULL) {
+        ESP_LOGE(TAG, "Invalid guess");
+        return NULL;
+    }
 
+    ESP_LOGI(TAG, "Sending POST request to URL: %s", CHECK_WORD_URL);
+
+    char post_data[BUFFER_SIZE];
+    snprintf(post_data, BUFFER_SIZE, "{\"guess\":\"%s\"}", guess);
+    char output_buffer[BUFFER_SIZE] = {0};   // Buffer to store response of HTTP request
+    http_error_t error_code = make_post_request(CHECK_WORD_URL, post_data, output_buffer, BUFFER_SIZE);
+
+    char* result = NULL;
+
+    switch (error_code) {
+        case HTTP_SUCCESS:
+            ESP_LOGI(TAG, "HTTP POST Status = %d, content_length = %lld",
+                esp_http_client_get_status_code(client),
+                esp_http_client_get_content_length(client));
+            ESP_LOG_BUFFER_HEXDUMP(TAG, output_buffer, strlen(output_buffer), ESP_LOG_INFO);
+            // Process the response to extract the result
+            // Replace this placeholder with actual parsing logic
+            result = malloc(BUFFER_SIZE);  // Adjust size as needed
+            if (result) {
+                memcpy(result, "result", strlen("result") + 1);  // Placeholder
+            }
+            break;
+
+        case HTTP_ERROR_OPEN_CONNECTION:
+            ESP_LOGE(TAG, "Failed to open HTTP connection");
+            break;
+
+        case HTTP_ERROR_WRITE_FAILED:
+            ESP_LOGE(TAG, "Write failed");
+            break;
+
+        case HTTP_ERROR_FETCH_HEADERS_FAILED:
+            ESP_LOGE(TAG, "HTTP client fetch headers failed");
+            break;
+
+        case HTTP_ERROR_READ_RESPONSE_FAILED:
+            ESP_LOGE(TAG, "Failed to read response");
+            break;
+
+        default:
+            ESP_LOGE(TAG, "An unknown error occurred");
+            break;
+    }
+
+    esp_http_client_cleanup(client);
+    return result;
+}
 
 esp_err_t api_client_init(void){
-    
-    
 
     response.buffer_size = BUFFER_SIZE; // Initial buffer size
     response.buffer = malloc(response.buffer_size);
@@ -219,13 +230,7 @@ esp_err_t api_client_init(void){
     // Configure the HTTP client
     config.url = "https://wordle-game-api1.p.rapidapi.com";
     config.cert_pem = root_cert;
-    //config.transport_type = HTTP_TRANSPORT_OVER_SSL;
-    //config.skip_cert_common_name_check = true;
     config.buffer_size = BUFFER_SIZE;
-    // .method = HTTP_METHOD_POST,
-    //config.event_handler = _http_event_handler;
-    //config.user_data = &response; // Pass response buffer to event handler
-    
 
     client = esp_http_client_init(&config);
     if (!client) {
@@ -239,7 +244,4 @@ esp_err_t api_client_init(void){
     esp_http_client_set_header(client, "Content-Type", "application/json");
 
     return ESP_OK;
-
 }
-
-
