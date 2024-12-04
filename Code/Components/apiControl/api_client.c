@@ -181,8 +181,8 @@ esp_err_t api_get_word(char* word, int word_size) {
     memcpy(word_guess, guess, 5);
     ESP_LOGI(TAG, "Sending POST request to URL: %s", CHECK_WORD_URL);
     ESP_LOG_BUFFER_HEXDUMP(TAG, word_guess, 6, ESP_LOG_INFO);
-
-    char post_data[50];
+    
+    char post_data[50] = {0};
     snprintf(post_data, 50, "{\"word\":\"%s\",\"timezone\":\"UTC + 8\"}", word_guess);
     char output_buffer[BUFFER_SIZE] = {0};   // Buffer to store response of HTTP request
     http_error_t error_code = make_post_request(CHECK_WORD_URL, post_data, output_buffer, BUFFER_SIZE);
@@ -196,7 +196,7 @@ esp_err_t api_get_word(char* word, int word_size) {
             ESP_LOG_BUFFER_HEXDUMP(TAG, output_buffer, strlen(output_buffer), ESP_LOG_INFO);
             // Process the response to extract the result
             // Replace this placeholder with actual parsing logic
-            //extract_result(output_buffer, strlen(output_buffer), guess, guess_size);
+            extract_result(output_buffer, strlen(output_buffer), guess, guess_size);
 
             break;
 
