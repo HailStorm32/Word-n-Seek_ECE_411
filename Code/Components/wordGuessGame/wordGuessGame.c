@@ -34,7 +34,7 @@ Literal Constants
 
 #define BTN_HOLD_DELAY_MS 200
 
-#define MAX_GUESSES 6
+#define MAX_GUESSES 2
 
 #define MAX_BRIGHTNESS 15
 #define DEFAULT_BRIGHTNESS 2 // 0 - 15
