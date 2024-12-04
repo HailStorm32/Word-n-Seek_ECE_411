@@ -41,7 +41,7 @@ const char *root_cert =
 #define WORD_SIZE 6
 #define BUFFER_SIZE 1024
 #define GET_WORD_URL "https://wordle-game-api1.p.rapidapi.com/word"
-#define CHECK_WORD_URL "https://wordle-game-api1.p.rapidapi.com/check"
+#define CHECK_WORD_URL "https://wordle-game-api1.p.rapidapi.com/guess"
 
 typedef struct {
     char *buffer;
@@ -61,6 +61,8 @@ static const char *TAG = "api_client";
 static esp_http_client_handle_t client;
 static esp_http_client_config_t config;
 static response_data_t response;
+static void extract_word(const char *json_string, size_t json_size, char *word_buffer, size_t buffer_size);
+static void extract_result(const char *json_string, size_t json_size, char *word_buffer, size_t buffer_size);
 
 /**
  * @brief Makes an HTTP POST request to the specified URL with the given post data.
@@ -103,11 +105,16 @@ static http_error_t make_post_request(const char *url, const char *post_data, ch
     return error_code;
 }
 
-char* api_get_word() {
-    char* word = malloc(WORD_SIZE);
-    if (word == NULL) {
-        ESP_LOGE(TAG, "Failed to allocate memory for word");
-        return NULL;
+esp_err_t api_get_word(char* word, int word_size) {
+    if (word == NULL)
+    {
+        ESP_LOGE(TAG, "Word Pointer is Null");
+        return ESP_ERR_INVALID_ARG;
+    }
+    else if (word_size < WORD_SIZE)
+    {
+        ESP_LOGE(TAG, "Given size is less than WORD_SIZE");
+        return ESP_ERR_INVALID_SIZE;
     }
 
     ESP_LOGI(TAG, "Sending POST request to URL: %s", GET_WORD_URL);
@@ -121,61 +128,65 @@ char* api_get_word() {
             ESP_LOGI(TAG, "HTTP POST Status = %d, content_length = %lld",
                 esp_http_client_get_status_code(client),
                 esp_http_client_get_content_length(client));
-            ESP_LOG_BUFFER_HEXDUMP(TAG, output_buffer, strlen(output_buffer), ESP_LOG_INFO);
+            ESP_LOG_BUFFER_HEXDUMP(TAG, output_buffer, strlen(output_buffer), ESP_LOG_INFO); //Debug line for hexdump and status codes
             // Process the response to extract the word
             // Replace this placeholder with actual parsing logic
-            memcpy(word, "word", WORD_SIZE);
+            extract_word(output_buffer, strlen(output_buffer), word, word_size);
+            printf("Extracted word: %s\n", word);
             break;
 
         case HTTP_ERROR_OPEN_CONNECTION:
             ESP_LOGE(TAG, "Failed to open HTTP connection");
-            free(word);
             word = NULL;
             break;
 
         case HTTP_ERROR_WRITE_FAILED:
             ESP_LOGE(TAG, "Write failed");
-            free(word);
             word = NULL;
             break;
 
         case HTTP_ERROR_FETCH_HEADERS_FAILED:
             ESP_LOGE(TAG, "HTTP client fetch headers failed");
-            free(word);
             word = NULL;
             break;
 
         case HTTP_ERROR_READ_RESPONSE_FAILED:
             ESP_LOGE(TAG, "Failed to read response");
-            free(word);
             word = NULL;
             break;
 
         default:
             ESP_LOGE(TAG, "An unknown error occurred");
-            free(word);
             word = NULL;
             break;
     }
 
-    esp_http_client_cleanup(client);
-    return word;
+    //esp_http_client_cleanup(client);
+    return ESP_OK;
 }
 
-char* api_check_word(const char* guess) {
-    if (guess == NULL) {
-        ESP_LOGE(TAG, "Invalid guess");
-        return NULL;
+    esp_err_t api_check_word(char* guess, int guess_size) {
+    char word_guess[5] = {0};
+    
+    if (guess == NULL)
+    {
+        ESP_LOGE(TAG, "Guess Pointer is Null");
+        return ESP_ERR_INVALID_ARG;
     }
-
+    else if (guess_size < WORD_SIZE)
+    {
+        ESP_LOGE(TAG, "Given size is less than WORD_SIZE");
+        return ESP_ERR_INVALID_SIZE;
+    }
+    memcpy(word_guess, guess, 5);
     ESP_LOGI(TAG, "Sending POST request to URL: %s", CHECK_WORD_URL);
+    ESP_LOG_BUFFER_HEXDUMP(TAG, word_guess, 6, ESP_LOG_INFO);
 
-    char post_data[BUFFER_SIZE];
-    snprintf(post_data, BUFFER_SIZE, "{\"guess\":\"%s\"}", guess);
+    char post_data[50];
+    snprintf(post_data, 50, "{\"word\":\"%s\",\"timezone\":\"UTC + 8\"}", word_guess);
     char output_buffer[BUFFER_SIZE] = {0};   // Buffer to store response of HTTP request
     http_error_t error_code = make_post_request(CHECK_WORD_URL, post_data, output_buffer, BUFFER_SIZE);
-
-    char* result = NULL;
+    ESP_LOGI(TAG, "Entering api_check_word Switch Statement");
 
     switch (error_code) {
         case HTTP_SUCCESS:
@@ -185,10 +196,8 @@ char* api_check_word(const char* guess) {
             ESP_LOG_BUFFER_HEXDUMP(TAG, output_buffer, strlen(output_buffer), ESP_LOG_INFO);
             // Process the response to extract the result
             // Replace this placeholder with actual parsing logic
-            result = malloc(BUFFER_SIZE);  // Adjust size as needed
-            if (result) {
-                memcpy(result, "result", strlen("result") + 1);  // Placeholder
-            }
+            //extract_result(output_buffer, strlen(output_buffer), guess, guess_size);
+
             break;
 
         case HTTP_ERROR_OPEN_CONNECTION:
@@ -211,9 +220,9 @@ char* api_check_word(const char* guess) {
             ESP_LOGE(TAG, "An unknown error occurred");
             break;
     }
-
-    esp_http_client_cleanup(client);
-    return result;
+    ESP_LOGI(TAG, "Post api_check_word Switch Statement");
+    //esp_http_client_cleanup(client);
+    return ESP_OK;
 }
 
 esp_err_t api_client_init(void){
@@ -244,4 +253,46 @@ esp_err_t api_client_init(void){
     esp_http_client_set_header(client, "Content-Type", "application/json");
 
     return ESP_OK;
+}
+
+static void extract_word(const char *json_string, size_t json_size, char *word_buffer, size_t buffer_size) {
+    cJSON *root = cJSON_ParseWithLength(json_string, json_size);
+    if (root == NULL) {
+        // Handle JSON parsing error
+        word_buffer[0] = '\0';
+        return;
+    }
+
+    cJSON *word_item = cJSON_GetObjectItem(root, "word");
+    if (cJSON_IsString(word_item) && (word_item->valuestring != NULL)) {
+        // Copy the "word" value into the provided buffer
+        strncpy(word_buffer, word_item->valuestring, buffer_size - 1);
+        word_buffer[buffer_size - 1] = '\0';  // Ensure null-termination
+    } else {
+        // "word" item not found or not a string
+        word_buffer[0] = '\0';
+    }
+
+    cJSON_Delete(root);
+}
+
+static void extract_result(const char *json_string, size_t json_size, char *word_buffer, size_t buffer_size) {
+    cJSON *root = cJSON_ParseWithLength(json_string, json_size);
+    if (root == NULL) {
+        // Handle JSON parsing error
+        word_buffer[0] = '\0';
+        return;
+    }
+
+    cJSON *word_item = cJSON_GetObjectItem(root, "result");
+    if (cJSON_IsString(word_item) && (word_item->valuestring != NULL)) {
+        // Copy the "word" value into the provided buffer
+        strncpy(word_buffer, word_item->valuestring, buffer_size - 1);
+        word_buffer[buffer_size - 1] = '\0';  // Ensure null-termination
+    } else {
+        // "word" item not found or not a string
+        word_buffer[0] = '\0';
+    }
+
+    cJSON_Delete(root);
 }

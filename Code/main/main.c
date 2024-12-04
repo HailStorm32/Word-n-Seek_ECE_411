@@ -18,9 +18,9 @@ int app_main(void)
     display_init();
     
     //Fetching word of the day from API
-    
+    word2 = malloc(sizeof(char)* 6);
     ESP_LOGI(LOG_TAG, "Fetching word from API");
-    word2 = api_get_word();
+    api_get_word(word2, 6);
 
     if (word2) {
         ESP_LOGI(LOG_TAG, "Word retrieved: %s", word2);
@@ -28,8 +28,16 @@ int app_main(void)
     } else {
         ESP_LOGE(LOG_TAG, "Failed to get word from API");
     }
+    ESP_LOGI(LOG_TAG, "Entering api_check_word");
+    api_check_word(word2, 6);
+    ESP_LOGI(LOG_TAG, "Post api_check_word");
+    if (word2) {
+        ESP_LOGI(LOG_TAG, "Word Checked: %s", word2);
+        // Display the word
+    } else {
+        ESP_LOGE(LOG_TAG, "Failed to get word from API");
+    }
     
-
     ESP_LOGI(LOG_TAG, "Boot successful");
 
     setCharacter(E, 0);
