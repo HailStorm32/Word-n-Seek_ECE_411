@@ -128,7 +128,7 @@ esp_err_t api_get_word(char* word, int word_size) {
             ESP_LOGI(TAG, "HTTP POST Status = %d, content_length = %lld",
                 esp_http_client_get_status_code(client),
                 esp_http_client_get_content_length(client));
-            ESP_LOG_BUFFER_HEXDUMP(TAG, output_buffer, strlen(output_buffer), ESP_LOG_INFO); //Debug line for hexdump and status codes
+            ESP_LOG_BUFFER_HEXDUMP(TAG, output_buffer, strlen(output_buffer), ESP_LOG_DEBUG); //Debug line for hexdump and status codes
             // Process the response to extract the word
             // Replace this placeholder with actual parsing logic
             extract_word(output_buffer, strlen(output_buffer), word, word_size);
@@ -180,10 +180,11 @@ esp_err_t api_get_word(char* word, int word_size) {
     }
     memcpy(word_guess, guess, 5);
     ESP_LOGI(TAG, "Sending POST request to URL: %s", CHECK_WORD_URL);
-    ESP_LOG_BUFFER_HEXDUMP(TAG, word_guess, 6, ESP_LOG_INFO);
+    ESP_LOG_BUFFER_HEXDUMP(TAG, word_guess, 6, ESP_LOG_DEBUG);
     
     char post_data[50] = {0};
     snprintf(post_data, 50, "{\"word\":\"%s\",\"timezone\":\"UTC + 8\"}", word_guess);
+    ESP_LOG_BUFFER_HEXDUMP(TAG, post_data, 50, ESP_LOG_DEBUG);
     char output_buffer[BUFFER_SIZE] = {0};   // Buffer to store response of HTTP request
     http_error_t error_code = make_post_request(CHECK_WORD_URL, post_data, output_buffer, BUFFER_SIZE);
     ESP_LOGI(TAG, "Entering api_check_word Switch Statement");
@@ -193,7 +194,7 @@ esp_err_t api_get_word(char* word, int word_size) {
             ESP_LOGI(TAG, "HTTP POST Status = %d, content_length = %lld",
                 esp_http_client_get_status_code(client),
                 esp_http_client_get_content_length(client));
-            ESP_LOG_BUFFER_HEXDUMP(TAG, output_buffer, strlen(output_buffer), ESP_LOG_INFO);
+            ESP_LOG_BUFFER_HEXDUMP(TAG, output_buffer, strlen(output_buffer), ESP_LOG_DEBUG);
             // Process the response to extract the result
             // Replace this placeholder with actual parsing logic
             extract_result(output_buffer, strlen(output_buffer), guess, guess_size);
