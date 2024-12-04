@@ -1,7 +1,9 @@
 #include "esp_log.h"
 #include <string.h>
+#include <ctype.h>
 #include <matrixDisplay.h>
 #include <gpioControl.h>
+#include <api_client.h>
 #include "wordGuessGame.h"
 
 
@@ -32,7 +34,7 @@ Literal Constants
 
 #define BTN_HOLD_DELAY_MS 200
 
-#define MAX_GUESSES 6
+#define MAX_GUESSES 2
 
 #define MAX_BRIGHTNESS 15
 #define DEFAULT_BRIGHTNESS 2 // 0 - 15
@@ -157,6 +159,18 @@ esp_err_t displayResults(void);
 
 /*
 * Description:
+*      Sets word to all lowercase
+* 
+* Arguments:
+*     char *str: The string to convert to lowercase (needs to be null terminated)
+* 
+* Returns:
+*     None
+*/
+void toLowercase(char *str);
+
+/*
+* Description:
 *      Calls the api and validates the guess
 *      If the guess is incorrect, the board will be updated
 * 
@@ -241,6 +255,13 @@ void saveCarousalState(void)
     carousalScreenState[3] = charToSymbol(carousalCharacters[carousalSlider.end]);
 }
 
+void toLowercase(char *str) 
+{
+    for (int i = 0; str[i] != '\0'; i++) {
+        str[i] = tolower((unsigned char)str[i]); // Use tolower for each character
+    }
+}
+
 esp_err_t wordGuessGameReset(void)
 {
     esp_err_t ret = ESP_OK;
@@ -272,8 +293,9 @@ esp_err_t wordGuessGameReset(void)
     wordToGuess[WORD_SIZE - 1] = '\0';
 
     // Retreive the word to guess
-    //TODO: Add word retreival call
-    memcpy(wordToGuess, "HELLO", WORD_SIZE);
+    api_get_word(wordToGuess, WORD_SIZE);
+    // memcpy(wordToGuess, "HELLO", WORD_SIZE);
+    ESP_LOGI(LOG_TAG, "Word to guess: %s", wordToGuess);
 
     // Reset the guessedWord
     memset(guessedWord, '-', sizeof(guessedWord));
@@ -313,7 +335,7 @@ esp_err_t wordGuessGameStart(void)
             break;
         case LETTER_SELECTION:
             gpio_set_level(SELECT_BTN_LED, 1);
-            gpio_set_level(GUESS_BTN_LED, 1);
+            gpio_set_level(GUESS_BTN_LED, 0);
             gpio_set_level(DELETE_BTN_LED, 0);
             gpio_set_level(EXIT_BTN_LED, 1);
             break;
@@ -423,6 +445,8 @@ esp_err_t wordGuessGameStart(void)
                         // Do nothing, no functionality for this button in this state
                         break;
                     case LETTER_SELECTION:
+                        // Do nothing, no functionality for this button in this state
+                        break;
                     case LETTER_EDIT:
                         getWord(guessedWord, sizeof(guessedWord));
 
@@ -447,6 +471,10 @@ esp_err_t wordGuessGameStart(void)
                                 {
                                     resultScreenState[segment] = charToSymbol(wordToGuess[segment]);
                                 }
+
+                                ESP_LOG_BUFFER_HEXDUMP(LOG_TAG, wordToGuess, WORD_SIZE, ESP_LOG_DEBUG);
+                                ESP_LOGI(LOG_TAG, "------");
+                                ESP_LOG_BUFFER_HEXDUMP(LOG_TAG, resultScreenState, CASCADE_SIZE, ESP_LOG_DEBUG);
 
                                 // Update the results screen
                                 displayResults();
@@ -777,10 +805,14 @@ bool validateGuess(void)
 {
     bool isCorrect = true;
     char guessResults[WORD_SIZE];
+
+    memcpy(guessResults, guessedWord, WORD_SIZE);
+
+    toLowercase(guessResults);
     
-    // TODO: Add guess call
+    api_check_word(guessResults, WORD_SIZE);
     // memcpy(guessResults, "++--x", WORD_SIZE);
-    memcpy(guessResults, "+++++", WORD_SIZE);
+    // memcpy(guessResults, "+++++", WORD_SIZE);
 
     // Set the results
     for(uint8_t segment = 0; segment < CASCADE_SIZE; segment++)

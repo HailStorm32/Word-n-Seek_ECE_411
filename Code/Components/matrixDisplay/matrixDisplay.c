@@ -1,4 +1,5 @@
 #include <string.h>
+#include <ctype.h>
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -123,7 +124,7 @@ symbols_t charToSymbol(char character)
 {
     for(uint8_t index = 0; index < TOTAL_NUM_OF_SYMBOLS; index++)
     {
-        if(character == graphicSymbolMap[index].character)
+        if(toupper(character) == graphicSymbolMap[index].character)
         {
             return (symbols_t)index;
         }
