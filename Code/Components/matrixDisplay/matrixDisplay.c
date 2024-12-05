@@ -1,4 +1,5 @@
 #include <string.h>
+#include <ctype.h>
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -20,7 +21,7 @@ Literal Constants
 #define LEFT_ARROW_SEGMENT  0
 #define RIGHT_ARROW_SEGMENT (CASCADE_SIZE - 1)
 
-#define MATRIX_DISP_TAG "matrix_display"
+#define LOG_TAG "matrix_display"
 
 
 /*-----------------------------------------------------------
@@ -77,24 +78,6 @@ Local Function Prototypes
 */
 void correctCursorPos(void);
 
-/*
-* Description:
-*   Displays a graphic accross all displays
-*     
-*   NOTE:
-*      Must contain enough frames to fill all segments
-*      Graphic is displayed starting from the far left 
-*      of the top display and moves to the right
-*
-* Arguments:
-*      uint64_t *graphic: Pointer to graphic array
-*      int size: Size of the graphic array
-*
-* Returns:
-*      esp_err_t: ESP_OK if the graphic was displayed successfully
-*/
-esp_err_t displayFullGraphic(const uint64_t *graphic, const int size);
-
 
 /*
 * Description:
@@ -108,19 +91,6 @@ esp_err_t displayFullGraphic(const uint64_t *graphic, const int size);
 *      '?' if the graphic is not a valid character
 */
 char graphicToChar(uint64_t graphic);
-
-
-/*
-* Description:
-*   Resets the board to the starting position
-*   
-* Arguments:
-*      None
-*
-* Returns:
-*      esp_err_t: ESP_OK if board was reset successfully
-*/
-esp_err_t resetBoard(void);
 
 /*-----------------------------------------------------------
 Functions
@@ -145,9 +115,22 @@ void clearDisplay(display_t display)
         break;
 
     default:
-        ESP_LOGE(MATRIX_DISP_TAG, "Invalid display");
+        ESP_LOGE(LOG_TAG, "Invalid display");
         break;
     }
+}
+
+symbols_t charToSymbol(char character)
+{
+    for(uint8_t index = 0; index < TOTAL_NUM_OF_SYMBOLS; index++)
+    {
+        if(toupper(character) == graphicSymbolMap[index].character)
+        {
+            return (symbols_t)index;
+        }
+    }
+
+    return INVALID_SYMBOL;
 }
 
 void correctCursorPos(void)
@@ -179,14 +162,14 @@ esp_err_t displayFullGraphic(const uint64_t *graphic, const int size)
     // Check if pointer is valid
     if(graphic == NULL)
     {
-        ESP_LOGE(MATRIX_DISP_TAG, "Invalid graphic pointer");
+        ESP_LOGE(LOG_TAG, "Invalid graphic pointer");
         return ESP_ERR_INVALID_ARG;
     }
 
     // Check if there are enough frames to fill all segments
     if(size / sizeof(uint64_t) < NUM_DISPLAYS * CASCADE_SIZE)
     {
-        ESP_LOGE(MATRIX_DISP_TAG, "Not enough frames to fill all segments");
+        ESP_LOGE(LOG_TAG, "Not enough frames to fill all segments");
         return ESP_ERR_INVALID_SIZE;
     }
 
@@ -232,7 +215,7 @@ esp_err_t display_init(void)
     // Initialize the displays
     for(uint8_t display = 0; display < NUM_DISPLAYS; display++)
     {
-        ESP_LOGI(MATRIX_DISP_TAG, "Initializing display %d", display);
+        ESP_LOGI(LOG_TAG, "Initializing display %d", display);
         max7219_t *dev = &displays[display]->dev;
 
         // Configure display
@@ -265,17 +248,31 @@ esp_err_t display_init(void)
     // Diplay the WORD n SEEK! graphic
     ESP_ERROR_CHECK(displayFullGraphic(dispWordNSeek, sizeof(dispWordNSeek)));
 
-    vTaskDelay(pdMS_TO_TICKS(5000));
+    // vTaskDelay(pdMS_TO_TICKS(5000));
 
-    // Reset the board
-    resetBoard();
+    // // Reset the board
+    // resetBoard();
 
     return ESP_OK;
+}
+
+void enableCursor(void)
+{
+    if(cursor.isValid)
+    {
+        ESP_LOGW(LOG_TAG, "Cursor is already enabled");
+    }
+    cursor.isValid = true;
 }
 
 char getCharAtCursor(void)
 {
     return graphicToChar(segmentStates[cursor.curDisplay][cursor.curSegment]);
+}
+
+uint8_t getCursorPos(void)
+{
+    return cursor.curSegment;
 }
 
 esp_err_t getWord(char *word, int wordSize)
@@ -286,22 +283,22 @@ esp_err_t getWord(char *word, int wordSize)
     // Check if the word array is valid
     if(word == NULL)
     {
-        ESP_LOGE(MATRIX_DISP_TAG, "Invalid word array");
+        ESP_LOGE(LOG_TAG, "Invalid word array");
         return ESP_ERR_INVALID_ARG;
     }
 
     // Check if the word array is large enough (including null terminator)
-    if(wordSize < CASCADE_SIZE + 1)
+    if(wordSize < CASCADE_SIZE)
     {
-        ESP_LOGE(MATRIX_DISP_TAG, "Word array is too small");
+        ESP_LOGE(LOG_TAG, "Word array is too small");
         return ESP_ERR_INVALID_SIZE;
     }
 
     // Get the word in graphic form
     memcpy(wordGraphicArray, segmentStates[UPPER_DISPLAY], CASCADE_SIZE * sizeof(uint64_t));
 
-    // ESP_LOG_BUFFER_HEXDUMP(MATRIX_DISP_TAG, wordGraphicArray, wordSize * sizeof(uint64_t), ESP_LOG_DEBUG);
-    // ESP_LOG_BUFFER_HEXDUMP(MATRIX_DISP_TAG, segmentStates[UPPER_DISPLAY], CASCADE_SIZE * sizeof(uint64_t), ESP_LOG_DEBUG);
+    // ESP_LOG_BUFFER_HEXDUMP(LOG_TAG, wordGraphicArray, wordSize * sizeof(uint64_t), ESP_LOG_DEBUG);
+    // ESP_LOG_BUFFER_HEXDUMP(LOG_TAG, segmentStates[UPPER_DISPLAY], CASCADE_SIZE * sizeof(uint64_t), ESP_LOG_DEBUG);
 
     // Convert the graphic to characters
     for(uint8_t segment = 0; segment < CASCADE_SIZE; segment++)
@@ -310,7 +307,7 @@ esp_err_t getWord(char *word, int wordSize)
     }
 
     // Add null terminator
-    word[CASCADE_SIZE + 1] = '\0';
+    word[CASCADE_SIZE] = '\0';
 
     return ret;
 }
@@ -318,16 +315,16 @@ esp_err_t getWord(char *word, int wordSize)
 char graphicToChar(uint64_t graphic)
 {   
     // Check if graphic is a letter
-    for(uint8_t index = 0; index < TOTAL_NUM_OF_CHARACRERS; index++)
+    for(uint8_t index = 0; index < TOTAL_NUM_OF_SYMBOLS; index++)
     {   
         // Also account for the inverted graphic (aka the cursor)
-        if((graphic == graphicCharMap[index].graphic) || (graphic == ~graphicCharMap[index].graphic))
+        if((graphic == graphicSymbolMap[index].graphic) || (graphic == ~graphicSymbolMap[index].graphic))
         {
-            return graphicCharMap[index].character;
+            return graphicSymbolMap[index].character;
         }
     }
     
-    ESP_LOGD(MATRIX_DISP_TAG, "Invalid graphic: %llx", graphic);
+    ESP_LOGD(LOG_TAG, "Invalid graphic: %llx", graphic);
 
     return '?';
 }
@@ -336,6 +333,13 @@ esp_err_t moveCursor(direction_t direction)
 {
     esp_err_t ret = ESP_OK;
     uint64_t * currentSegmentState;
+
+    // Check if the cursor is valid
+    if(!cursor.isValid)
+    {
+        ESP_LOGD(LOG_TAG, "Cursor is not valid");
+        return ESP_OK;
+    }
 
     // Get pointer to the current segment state
     currentSegmentState = &segmentStates[cursor.curDisplay][cursor.curSegment];
@@ -397,7 +401,7 @@ esp_err_t moveCursor(direction_t direction)
         break;
     
     default:
-        ESP_LOGE(MATRIX_DISP_TAG, "Invalid cursor direction");
+        ESP_LOGE(LOG_TAG, "Invalid cursor direction");
         ret = ESP_ERR_NOT_SUPPORTED;
         break;
     }
@@ -410,6 +414,24 @@ esp_err_t moveCursor(direction_t direction)
 
     // Display the cursor
     ret |= max7219_draw_image_8x8(&displays[cursor.curDisplay]->dev, cursor.curSegment * 8, currentSegmentState);
+
+    return ret;
+}
+
+esp_err_t moveCursorMultiple(direction_t direction, uint8_t numMoves)
+{
+    esp_err_t ret = ESP_OK;
+
+    // Disable the cursor to prevent flickering
+    disableCursor();
+
+    for(uint8_t move = 0; move < numMoves; move++)
+    {
+        ret |= moveCursor(direction);
+    }
+
+    // Enable the cursor
+    enableCursor();
 
     return ret;
 }
@@ -441,7 +463,7 @@ esp_err_t resetCursor(void)
     }
 
     // Reset the cursor
-    cursor.curDisplay = LOWER_DISPLAY;
+    cursor.curDisplay = UPPER_DISPLAY;
     cursor.curSegment = 2;
 
     // Display the new cursor
@@ -453,23 +475,75 @@ esp_err_t resetCursor(void)
     return ret;
 }
 
-esp_err_t setCharacter(characters_t character, uint8_t charPos)
+esp_err_t setSymbol(symbols_t symbol, display_t display, uint8_t charPos)
 {
     esp_err_t ret = ESP_OK;
     uint64_t graphic = 0;
 
-    // Check if the character position is valid
+    // Check if the symbol position is valid
     if(charPos >= CASCADE_SIZE)
     {
-        ESP_LOGE(MATRIX_DISP_TAG, "Invalid character position: %d", charPos);
+        ESP_LOGE(LOG_TAG, "Invalid symbol position: %d", charPos);
         return ESP_ERR_INVALID_ARG;
     }
 
-    graphic = graphicCharMap[character].graphic;
+    graphic = graphicSymbolMap[symbol].graphic;
 
-    // Set the character
-    segmentStates[UPPER_DISPLAY][charPos] = graphic;
-    ret |= max7219_draw_image_8x8(&displays[UPPER_DISPLAY]->dev, charPos * 8, &graphic);
+    // ESP_LOGD(LOG_TAG, "Graphic: %llx", graphic);
+
+    // If the cursor is on the segment, invert the graphic
+    if(cursor.isValid && (cursor.curSegment == charPos))
+    {   
+        ESP_LOGD(LOG_TAG, "segment: %d", charPos);
+        ESP_LOGD(LOG_TAG, "Inverting graphic");
+        graphic = ~graphic;
+    }
+
+    // Set the symbol on the chosen display and segment
+    switch(display)
+    {
+    case LOWER_DISPLAY:
+    case UPPER_DISPLAY:
+        // Set the character
+        segmentStates[display][charPos] = graphic;
+
+        ret |= max7219_draw_image_8x8(&displays[display]->dev, charPos * 8, &graphic);
+        break;
+
+    case ALL_DISPLAYS:
+        for(uint8_t disp = 0; disp < NUM_DISPLAYS; disp++)
+        {
+            // Set the character
+            segmentStates[disp][charPos] = graphic;
+
+            ret |= max7219_draw_image_8x8(&displays[disp]->dev, charPos * 8, &graphic);
+        }
+        break;
+    default:
+        ESP_LOGE(LOG_TAG, "Invalid display");
+        break;
+    }
 
     return ret;
+}
+
+void setBrightness(uint8_t brightness)
+{
+    if(brightness > MAX7219_MAX_BRIGHTNESS)
+    {
+        ESP_LOGE(LOG_TAG, "Invalid brightness: %d", brightness);
+        return;
+    }
+
+    ESP_ERROR_CHECK(max7219_set_brightness(&displays[LOWER_DISPLAY]->dev, brightness));
+    ESP_ERROR_CHECK(max7219_set_brightness(&displays[UPPER_DISPLAY]->dev, brightness));
+}
+
+void disableCursor(void)
+{
+    if(!cursor.isValid)
+    {
+        ESP_LOGW(LOG_TAG, "Cursor is already disabled");
+    }
+    cursor.isValid = false;
 }
