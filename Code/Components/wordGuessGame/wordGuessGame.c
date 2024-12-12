@@ -16,13 +16,13 @@ Literal Constants
 #define WORD_SIZE 6 // 5 characters + null terminator
 
 // Map buttons
-#define SELECT_BTN      GPIO_BTN_A
+#define SELECT_BTN      GPIO_BTN_A      //J12 Header ()
 #define SELECT_BTN_LED  GPIO_BTN_A_LED
-#define GUESS_BTN       GPIO_BTN_B
-#define GUESS_BTN_LED   GPIO_BTN_B_LED
-#define DELETE_BTN      GPIO_BTN_C
-#define DELETE_BTN_LED  GPIO_BTN_C_LED
-#define EXIT_BTN        GPIO_BTN_D
+#define GUESS_BTN       GPIO_BTN_B      //J13 Header (BLUE)
+#define GUESS_BTN_LED   GPIO_BTN_B_LED  
+#define DELETE_BTN      GPIO_BTN_C      //J11 Header (YELLOW)
+#define DELETE_BTN_LED  GPIO_BTN_C_LED  
+#define EXIT_BTN        GPIO_BTN_D      //J14 Header (RED)
 #define EXIT_BTN_LED    GPIO_BTN_D_LED
 
 #define CAROUSEL_START_SEGMENT  1
@@ -32,9 +32,9 @@ Literal Constants
 #define CAROUSEL_SLIDER_INIT_MID   0
 #define CAROUSEL_SLIDER_INIT_END   1
 
-#define BTN_HOLD_DELAY_MS 200
+#define BTN_HOLD_DELAY_MS 150 //200
 
-#define MAX_GUESSES 2
+#define MAX_GUESSES 6
 
 #define MAX_BRIGHTNESS 15
 #define DEFAULT_BRIGHTNESS 2 // 0 - 15
