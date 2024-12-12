@@ -43,7 +43,7 @@ Create headers called `hidden.h` in the following directories and format as foll
 ## Use
 
 ### Buttons
-[insert labeled photo]
+<img src="https://i.imgur.com/7m9EFsD.jpeg" alt="Description" width="400" />
 
 There are four small white directional buttons. Two for LEFT and RIGHT movement of the cursor. Press and hold either to slide the cursor left or right 
 As well as two buttons for increasing and decreasing the screen brightness.
