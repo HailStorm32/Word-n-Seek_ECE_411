@@ -1,11 +1,33 @@
 ## About
 
+### Summary
 This repo houses the code, board files, CAD files and documents for the ECE 411 course group project.
 
 Word-n-Seek integrates a Wordle-style game into a small-sized arcade style gaming console, using a word retrieved from a Wordle-like API. This approach adds a unique dimension to the gameplay experience compared to using a phone or website.
 
 The gameplay operates similarly to the popular Wordle game. Every day, the device will pull a new five-letter word from the API. The user has six attempts to guess the word, selecting letters with a buttons and confirming choices with selection keys. After each guess, the game marks correctly placed letters. The user continues guessing until either (a) they correctly guess the word or (b) they use all six attempts.
 
+<p align="center">
+<img src="https://i.imgur.com/esupFN6.jpeg" alt="Description" width="400" />
+</p>
+
+### Contributers
+| Name                  | Contributions                                                                                 |
+|-----------------------|-----------------------------------------------------------------------------------------------|
+| [Bucanan Howard](https://github.com/BucananH)   | PCB design and schematics developer, documentation and writing, soldering, and testing.       |
+| [Daniyil Kashkan](https://github.com/PeppyCode)   | Documentation and writing lead, L1 diagram developer, power system design and construction, soldering, and testing. |
+|[Demetri Van Sickle](https://github.com/HailStorm32) | Programming lead, GitHub and team manager, GPIO, display & game logic code.                         |
+| [Mohammed Alreshoud](https://github.com/MohammedAlreshoud) | Documentation and writing, 3D design developer and console box constructor.                  |
+| [Wallace McKenzie](https://github.com/Poly-guru)  | Programming, L0 diagram developer, Wordle API & Wi-Fi connection providing and testing.       |
+
+<br>
+
+### Open Source Libs Used
+- [max7219 Driver](https://github.com/UncleRus/esp-idf-lib/tree/master/components/max7219)
+- [cJSON](https://github.com/DaveGamble/cJSON)
+
+
+<br>
 <br>
 
 ## Setup
@@ -38,6 +60,7 @@ Create headers called `hidden.h` in the following directories and format as foll
 
 
 
+<br>
 <br>
 
 ## Use
