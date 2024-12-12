@@ -1,28 +1,14 @@
 #,Unique Name,P/NP,Manufacturer,Manufacturer Pin Number,Description,Distributor,Distributor Pin Number,Price Per Unit,Quantity,Total Cost,Link
-1,.1 uF Cap,P,Comchip,CAPP_0402_M,Capacitor,TAIYO YUDEN,963-MAASL105CC7105MF,0.1,2,0.2,https://www.mouser.com/ProductDetail/TAIYO-YUDEN/MAASL105CC7105MFCA01?qs=HFfMDpzxxd1Fn%2FInbJA7vw%3D%3D
-2,0603 Diode,P,Comchip,DIODE_0603,Diode,TAIYO YUDEN,750-CDBU0145-HF,0.32,1,0.32,https://www.mouser.com/ProductDetail/Comchip-Technology/CDBU0145-HF?qs=2qJf6qQ4IOKJ1QV5aOB4hg%3D%3D
-3,5V 2A Power Supply,P,CUI INC,PJ-002A,Power supply barrel jack for DC power,Same Sky,490-PJ-002A,0.7,1,0.7,https://www.mouser.com/ProductDetail/Same-Sky/PJ-002A?qs=WyjlAZoYn51CKfAix9Mngw%3D%3D&mgh=1&utm_id=17222215321&gad_source=1&gclid=Cj0KCQiA_9u5BhCUARIsABbMSPtuQd9rLnlNI-QA40Ja17_5jZIZApsFG0-n5HV6Y0H3y8XeLH3q4Z4aApYSEALw_wcB
-4,5 pin Header,P,Samtec,TSW-105-23-G-S,Connector Header Through Hole 5 position 0.100  (2.54mm),Samtec,200-TSW10523GSLL,0.58,10,5.8,https://www.mouser.com/ProductDetail/Samtec/TSW-105-23-G-S-LL?qs=rU5fayqh%252BE0mHsi8oUSlPQ%3D%3D&srsltid=AfmBOoq03jXPoI9egRZFQrdD352W-qrKzSIL6IHQyvKgZOkWfpOfZx4H
-5,Jumper,P,Samtec,MTLW-101-24-G-D-210,Connector Header Through Hole 2 position,Samtec,200-MTLW10124GD210,0.48,3,1.44,https://www.mouser.com/ProductDetail/Samtec/MTLW-101-24-G-D-210?qs=rU5fayqh%252BE2sZjyn6To4eg%3D%3D&utm_source=eciaauthorized&utm_medium=aggregator&utm_campaign=200-MTLW10124GD210&utm_content=Samtec&utm_term=eciaalternate
-6,7 Nmos Stack,P,TI,TPL7407LDR,"40-V, 7-ch NMOS array low-side driver",Texas Instruments,595-TPL7407LDR,0.5,1,0.5,https://www.mouser.com/ProductDetail/Texas-Instruments/TPL7407LDR?qs=%252BFzhjShcsaKLZg%252BYibC41A%3D%3D&utm_id=9042821733&gad_source=1&gclid=Cj0KCQiA_9u5BhCUARIsABbMSPuOxxC2wxmZPix3Yw68p1nR7YqxSM3gc1BFRplowvmO2V-tRIAChpsaAuImEALw_wcB
-7,ESP32,P,Espressif,ESP32-S3-DEVKITC-1-N8R2,"WiFi Development Tools - 802.11 (Engineering Samples Only) ESP32-S3 General-Purpose Development Board, ESP32-S3-WROOM-1-N8R2, with Pin Header",Espressif Systems,356-E32-S3DVKTC1N8R2,15,1,15,https://www.mouser.com/ProductDetail/Espressif-Systems/ESP32-S3-DevKitC-1-N8R2?qs=Wj%2FVkw3K%252BMCYPoeNuhXFsw%3D%3D&mgh=1&utm_id=17222215321&gad_source=1&gclid=Cj0KCQiA_9u5BhCUARIsABbMSPsBCxmr3TzyGUlnOyZtAFoLWztb8Fsm7lIWuTVi8awt9MmLminRsc4aAur6EALw_wcB
-8,8x8 MAX7219 Dot Matrix Display,P,EC Buying,N/A,8x8 Dot Matrix Display,Amazon,N/A,1.08,10,10.8,https://a.co/d/9yggITk
-9,24mm LED illuminated push button,P,EG Starts,N/A,24mm LED illuminated push button,Amazon,N/A,2.4,5,12,https://a.co/d/87GFwCD
-10,30mm LED illuminated push button,P,EG Starts,N/A,30mm LED illuminated push button,Amazon,N/A,2.38,5,11.9,https://a.co/d/aKY7UUA
-,,,,,,,,,,0,
-,,,,,,,,,,0,
-,,,,,,,,,,0,
-,,,,,,,,,,0,
-,,,,,,,,,,0,
-,,,,,,,,,,0,
-,,,,,,,,,,0,
-,,,,,,,,,,0,
-,,,,,,,,,,0,
-,,,,,,,,,,0,
-,,,,,,,,,,0,
-,,,,,,,,,,0,
-,,,,,,,,,,0,
-,,,,,,,,,,0,
-,,,,,,,,,,0,
-,,,,,,,,,,0,
-,,,,,,,,,Total Cost:,58.66,
+1,.1 uF Cap,P,Comchip,CAPP_0402_M,Capacitor,TAIYO YUDEN,963-MAASL105CC7105MF,$0.10 ,2,$0.20 ,https://www.mouser.com/ProductDetail/TAIYO-YUDEN/MAASL105CC7105MFCA01?qs=HFfMDpzxxd1Fn%2FInbJA7vw%3D%3D
+2,0603 Diode,P,Comchip,DIODE_0603,Diode,TAIYO YUDEN,750-CDBU0145-HF,$0.32 ,1,$0.32 ,https://www.mouser.com/ProductDetail/Comchip-Technology/CDBU0145-HF?qs=2qJf6qQ4IOKJ1QV5aOB4hg%3D%3D
+3,5V 2A Power Supply,P,CUI INC,PJ-002A,Power supply barrel jack for DC power,Same Sky,490-PJ-002A,$0.70 ,1,$0.70 ,https://www.mouser.com/ProductDetail/Same-Sky/PJ-002A?qs=WyjlAZoYn51CKfAix9Mngw%3D%3D&mgh=1&utm_id=17222215321&gad_source=1&gclid=Cj0KCQiA_9u5BhCUARIsABbMSPtuQd9rLnlNI-QA40Ja17_5jZIZApsFG0-n5HV6Y0H3y8XeLH3q4Z4aApYSEALw_wcB
+4,5 pin Header,P,Samtec,TSW-105-23-G-S,Connector Header Through Hole 5 position 0.100  (2.54mm),Samtec,200-TSW10523GSLL,$0.58 ,10,$5.80 ,https://www.mouser.com/ProductDetail/Samtec/TSW-105-23-G-S-LL?qs=rU5fayqh%252BE0mHsi8oUSlPQ%3D%3D&srsltid=AfmBOoq03jXPoI9egRZFQrdD352W-qrKzSIL6IHQyvKgZOkWfpOfZx4H
+5,Jumper,P,Samtec,MTLW-101-24-G-D-210,Connector Header Through Hole 2 position,Samtec,200-MTLW10124GD210,$0.48 ,3,$1.44 ,https://www.mouser.com/ProductDetail/Samtec/MTLW-101-24-G-D-210?qs=rU5fayqh%252BE2sZjyn6To4eg%3D%3D&utm_source=eciaauthorized&utm_medium=aggregator&utm_campaign=200-MTLW10124GD210&utm_content=Samtec&utm_term=eciaalternate
+6,7 Nmos Stack,P,TI,DRV777DR,"20-V, 7- bit Integrated Motor and Relay Driver",Texas Instruments,595-DRV777DR,$0.48 ,1,$0.48 ,https://www.mouser.com/ProductDetail/595-DRV777DR
+7,ESP32,P,Espressif,ESP32-S3-DEVKITC-1-N8R2,"WiFi Development Tools - 802.11 (Engineering Samples Only) ESP32-S3 General-Purpose Development Board, ESP32-S3-WROOM-1-N8R2, with Pin Header",Espressif Systems,356-E32-S3DVKTC1N8R2,$15.00 ,1,$15.00 ,https://www.mouser.com/ProductDetail/Espressif-Systems/ESP32-S3-DevKitC-1-N8R2?qs=Wj%2FVkw3K%252BMCYPoeNuhXFsw%3D%3D&mgh=1&utm_id=17222215321&gad_source=1&gclid=Cj0KCQiA_9u5BhCUARIsABbMSPsBCxmr3TzyGUlnOyZtAFoLWztb8Fsm7lIWuTVi8awt9MmLminRsc4aAur6EALw_wcB
+8,8x8 MAX7219 Dot Matrix Display,P,EC Buying,N/A,8x8 Dot Matrix Display ,Amazon,N/A,$1.08 ,10,$10.80 ,https://a.co/d/9yggITk
+9,24mm LED Illuminated Push Button,P,EG Starts,N/A,24mm LED Illuminated Push Button,Amazon ,N/A,$2.40 ,5,$12.00 ,https://a.co/d/87GFwCD
+10,30mm LED Illuminated Push Button,P,EG Starts,N/A,30mm LED Illuminated Push Button,Amazon,N/A,$2.38 ,5,$11.90 ,https://a.co/d/aKY7UUA
+11,3-D Printed enclosure,P,EPL,N/A,3-D Printed (enclosure) - Multiple parts,EPL,N/A,$38.24 ,1,$38.24 ,
+12,PCB,P,OSH park,N/A,Our PCB design ,OSH park,N/A,$30.13 ,1,$30.13 ,
+,,,,,,,,,Total Cost:,$127.01 ,
